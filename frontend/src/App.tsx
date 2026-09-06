@@ -5,8 +5,15 @@ import { OnboardingWizardPage } from '@/pages/OnboardingWizardPage'
 import { StyleGuidePage } from '@/pages/StyleGuidePage'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { OverviewPage } from '@/pages/admin/OverviewPage'
-import { StaffManagementPage } from '@/pages/admin/StaffManagementPage'
-import { AdminFeesPage, AdminAiPage } from '@/pages/admin'
+import {
+  StaffManagementPage,
+  AdminFeesPage,
+  AdminAiPage,
+  AdminAnnouncementsListPage,
+  AdminAnnouncementsComposerPage,
+  INITIAL_ADMIN_ANNOUNCEMENTS,
+  type AdminAnnouncement,
+} from '@/pages/admin'
 import {
   TeacherOverviewPage,
   type TeacherAssignment,
@@ -86,6 +93,8 @@ type AppView =
   | 'admin-staff'
   | 'admin-fees'
   | 'admin-ai'
+  | 'admin-announcements'
+  | 'admin-announcements-compose'
   | 'admin-other'
   | 'teacher-overview'
   | 'teacher-scores'
@@ -343,6 +352,30 @@ function App() {
     setCurrentView('student-cbt-results')
   }
 
+  // Admin Announcements State
+  const [adminAnnouncements, setAdminAnnouncements] = useState<AdminAnnouncement[]>(INITIAL_ADMIN_ANNOUNCEMENTS)
+  const [editingAnnouncement, setEditingAnnouncement] = useState<AdminAnnouncement | null>(null)
+
+  const handleSaveAnnouncement = (
+    ann: AdminAnnouncement,
+    targetStatus: 'sent' | 'scheduled' | 'draft'
+  ) => {
+    const updatedAnn: AdminAnnouncement = {
+      ...ann,
+      status: targetStatus,
+    }
+
+    setAdminAnnouncements((prev) => {
+      const exists = prev.some((item) => item.id === updatedAnn.id)
+      if (exists) {
+        return prev.map((item) => (item.id === updatedAnn.id ? updatedAnn : item))
+      }
+      return [updatedAnn, ...prev]
+    })
+    setEditingAnnouncement(null)
+    setCurrentView('admin-announcements')
+  }
+
   // Navigate within admin dashboard
   const handleAdminNavigate = (navId: string) => {
     setActiveAdminNavId(navId)
@@ -354,6 +387,8 @@ function App() {
       setCurrentView('admin-fees')
     } else if (navId === 'ai') {
       setCurrentView('admin-ai')
+    } else if (navId === 'announcements') {
+      setCurrentView('admin-announcements')
     } else {
       setCurrentView('admin-other')
     }
@@ -531,6 +566,23 @@ function App() {
         >
           <Sparkles className="w-3.5 h-3.5 text-gold-brand" />
           <span className="hidden sm:inline">AI Copilot</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveAdminNavId('announcements')
+            setCurrentView('admin-announcements')
+          }}
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView.startsWith('admin-announcements')
+              ? 'bg-indigo-brand text-white shadow-sm'
+              : 'hover:bg-white/10 text-gray-300'
+          }`}
+          title="Admin Announcements & Broadcasts"
+        >
+          <Megaphone className="w-3.5 h-3.5 text-amber-300" />
+          <span className="hidden sm:inline">Broadcasts</span>
         </button>
 
         <span className="w-px h-4 bg-white/20 mx-0.5" />
@@ -936,6 +988,59 @@ function App() {
           onLogout={() => setCurrentView('login')}
         >
           <AdminAiPage />
+        </DashboardLayout>
+      )}
+
+      {/* VIEW: ADMIN ANNOUNCEMENTS MANAGEMENT */}
+      {currentView === 'admin-announcements' && (
+        <DashboardLayout
+          activeNavId="announcements"
+          onNavigate={handleAdminNavigate}
+          pageTitle="School Announcements & Dispatches"
+          pageSubtitle="Broadcast notices, circulars, and event reminders to parents, students, and staff."
+          headerAction={
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                setEditingAnnouncement(null)
+                setCurrentView('admin-announcements-compose')
+              }}
+            >
+              <Plus className="w-4 h-4 mr-1.5" />
+              New Announcement
+            </Button>
+          }
+          onLogout={() => setCurrentView('login')}
+        >
+          <AdminAnnouncementsListPage
+            announcements={adminAnnouncements}
+            onNewAnnouncement={() => {
+              setEditingAnnouncement(null)
+              setCurrentView('admin-announcements-compose')
+            }}
+            onEditDraft={(item) => {
+              setEditingAnnouncement(item)
+              setCurrentView('admin-announcements-compose')
+            }}
+          />
+        </DashboardLayout>
+      )}
+
+      {/* VIEW: ADMIN ANNOUNCEMENTS COMPOSER */}
+      {currentView === 'admin-announcements-compose' && (
+        <DashboardLayout
+          activeNavId="announcements"
+          onNavigate={handleAdminNavigate}
+          pageTitle={editingAnnouncement ? 'Edit Announcement Draft' : 'Compose School Announcement'}
+          pageSubtitle="Draft and broadcast notifications to parents, students, or staff across multiple channels."
+          onLogout={() => setCurrentView('login')}
+        >
+          <AdminAnnouncementsComposerPage
+            initialAnnouncement={editingAnnouncement}
+            onSave={handleSaveAnnouncement}
+            onCancel={() => setCurrentView('admin-announcements')}
+          />
         </DashboardLayout>
       )}
 

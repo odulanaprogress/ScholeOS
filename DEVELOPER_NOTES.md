@@ -23,6 +23,7 @@ ScholeOS is constructed in sequential, self-contained **Waves**. Each wave estab
 | **Wave 8** | **Fees & Payments UI** | Institutional fee structures, class scoping, arrears tracking, sort/filter, reminders, bank transfer proof reconciliation | 🟢 **COMPLETED** |
 | **Wave 9** | **AI Assistant Panels** | ChatWindow component, Admin Copilot (chat & report card comments), Student AI Tutor (subject context & study guidance) | 🟢 **COMPLETED** |
 | **Wave 10** | **CBT (Computer-Based Test) Module** | Timer, QuestionNavigator, SelectableCard primitives; Teacher Test List, Question Builder, Results; Student CBT Portal, Full-screen Exam Room, Graded Script Review | 🟢 **COMPLETED** |
+| **Wave 11** | **Admin Announcements & Broadcasts** | Broadcast list page, full-page composer with audience scoping (Everyone, Parents, Students, Staff, Specific Class), multi-channel dispatches (In-App, SMS, WhatsApp), scheduled delivery, live card preview, and safety confirmation modal | 🟢 **COMPLETED** |
 
 ---
 
@@ -535,14 +536,64 @@ Wave 10 delivers a complete, high-stakes Computer-Based Testing engine for Niger
 
 ---
 
-## 16. Verification Log
+## 16. Wave 11: Admin Announcements & Multi-Channel Broadcasts
 
-- **[2026-09-06]**: Built reusable `Timer`, `QuestionNavigator`, and `SelectableCard` UI primitives.
-- **[2026-09-06]**: Created CBT data models, mock tests, questions, and submission results in `frontend/src/pages/cbt/cbtData.ts`.
-- **[2026-09-06]**: Built `TeacherCbtListPage.tsx`, `TeacherCbtBuilderPage.tsx`, and `TeacherCbtResultsPage.tsx`.
-- **[2026-09-06]**: Built `StudentCbtListPage.tsx`, full-screen distraction-free `StudentCbtExamView.tsx`, and `StudentCbtResultsPage.tsx`.
-- **[2026-09-06]**: Integrated CBT navigation into Subject Teacher, Class Teacher, and Student sidebars, and added Reviewer Dock shortcuts (`Teacher CBT`, `Student CBT`).
-- **[2026-09-06]**: Executed production build: `npm run build` (`tsc -b && vite build`) — **0 errors**, built cleanly in **28.44s** (1,945 modules transformed).
+Wave 11 builds the admin-side Announcement and Broadcast suite for school administrators, enabling multi-channel communication (In-App, SMS, WhatsApp) with precise audience targeting, delivery scheduling, live recipient feed preview, and dispatch confirmation modals.
+
+### Part A — Announcements List Page (`AdminAnnouncementsListPage.tsx`)
+1. **Metric StatCards**:
+   - Delivered Broadcasts (count of sent notices)
+   - Cumulative Reach (touchpoints across parents, students, staff)
+   - Scheduled Outgoing (count of automated future dispatches)
+   - Active Delivery Channels (In-App, SMS, WhatsApp coverage)
+2. **Announcements Table**:
+   - Title & Author / Origin
+   - Audience badge (e.g. "All Parents", "Staff Only", "JSS 2A, JSS 2B")
+   - Channel badges: In-App (indigo), SMS (amber), WhatsApp (emerald)
+   - Status badge: `Sent` (green with dot), `Scheduled` (blue with dot), `Draft` (neutral gray)
+   - Date Sent or Scheduled Date
+   - Action controls: View Details Modal and Edit Draft button
+3. **Top Action**: "New Announcement" primary button linking to the full-page composer.
+
+### Part B — Dedicated Full-Page Composer (`AdminAnnouncementsComposerPage.tsx`)
+1. **Two-Column Responsive Layout**:
+   - **Left Column (Composer Form)**:
+     - Title `Input`
+     - Message Body `Textarea` (7 rows)
+     - Target Audience Selector: "Everyone", "All Parents", "All Students", "Staff Only", or "Specific Class"
+     - Conditional Class Multi-Select: reveals selectable chips for 8 secondary classes when "Specific Class" is selected
+     - Delivery Channels:
+       - "In-App Notification" (always on, locked, free)
+       - "SMS Text Broadcast" (toggle with cost disclaimer)
+       - "WhatsApp Business Dispatch" (toggle with cost disclaimer)
+     - Delivery Timing: "Send Immediately" vs "Schedule for Later" (reveals `DatePicker` + Time dropdown)
+     - Action buttons: "Cancel & Discard", "Save as Draft", and "Send / Schedule Announcement"
+   - **Right Column (Live Recipient Preview)**:
+     - Real-time live card preview matching the exact Parent & Student feed card style from Wave 7:
+       - Target audience badge
+       - Broadcast title & delivery timestamp
+       - Formatted message text
+       - Author source line ("Principal's Office • Crown Academy")
+       - Channel tags
+     - Broadcast Parameters Card: Target Audience, Estimated Reach, Active Channels, and Execution Timing.
+2. **Safety Confirmation Modal**:
+   - Prompt: *"Send this announcement to [audience] via [channels]? This reaches approximately [X] recipients."*
+   - Dynamic recipient estimation based on selected audience/classes.
+   - Channel breakdown advisory (In-App instant feed, SMS carrier gateway, WhatsApp verified API).
+   - "Cancel" and "Confirm & Send" / "Confirm & Schedule" actions.
+
+---
+
+## 17. Verification Log
+
+- **[2026-09-06]**: Built reusable `Timer`, `QuestionNavigator`, and `SelectableCard` UI primitives (Wave 10).
+- **[2026-09-06]**: Created Subject Teacher CBT question builder and student distraction-free examination room (Wave 10).
+- **[2026-09-06]**: Created Admin Announcements data models, recipient estimator, and mock records in `frontend/src/pages/admin/announcements/announcementsData.ts` (Wave 11).
+- **[2026-09-06]**: Built `AdminAnnouncementsListPage.tsx` with StatCards, multi-channel badges, status filters, and notice inspection modal (Wave 11).
+- **[2026-09-06]**: Built `AdminAnnouncementsComposerPage.tsx` with audience scoping, class multi-select, SMS/WhatsApp toggles, scheduling, live preview card, and confirmation modal (Wave 11).
+- **[2026-09-06]**: Wired `admin-announcements` and `admin-announcements-compose` routes in `frontend/src/App.tsx`, updated admin sidebar, and added Reviewer Dock shortcut (`Broadcasts`).
+- **[2026-09-06]**: Executed production build: `npm run build` (`tsc -b && vite build`) — **0 errors**, built cleanly in **13.16s** (1,949 modules transformed).
 - **[2026-09-06]**: Verified live dev server at `http://127.0.0.1:5173/` returning `HTTP/1.1 200 OK`.
-- **[2026-09-06]**: **Wave 10 (CBT Module) is complete, robust, verified, and production-ready!**
+- **[2026-09-06]**: **Wave 11 (Admin Announcements) is complete, robust, verified, and production-ready!**
+
 
