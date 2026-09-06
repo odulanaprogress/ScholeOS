@@ -33,6 +33,22 @@ import {
   StudentTimetablePage,
   StudentAiPage,
 } from '@/pages/student'
+import {
+  TeacherCbtListPage,
+  TeacherCbtBuilderPage,
+  TeacherCbtResultsPage,
+} from '@/pages/teacher/cbt'
+import {
+  StudentCbtListPage,
+  StudentCbtExamView,
+  StudentCbtResultsPage,
+} from '@/pages/student/cbt'
+import {
+  INITIAL_CBT_TESTS,
+  INITIAL_CBT_RESULTS,
+  type CbtTest,
+  type StudentCbtSubmission,
+} from '@/pages/cbt'
 import { AiComingSoonPage } from '@/pages/AiComingSoonPage'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -59,6 +75,7 @@ import {
   CalendarDays,
   Bot,
   UserCheck,
+  Laptop,
 } from 'lucide-react'
 
 type AppView =
@@ -74,6 +91,9 @@ type AppView =
   | 'teacher-scores'
   | 'teacher-assignments'
   | 'teacher-announcements'
+  | 'teacher-cbt-list'
+  | 'teacher-cbt-builder'
+  | 'teacher-cbt-results'
   | 'class-teacher-overview'
   | 'class-teacher-scores'
   | 'class-teacher-attendance'
@@ -92,6 +112,9 @@ type AppView =
   | 'student-assignments'
   | 'student-timetable'
   | 'student-ai'
+  | 'student-cbt-list'
+  | 'student-cbt-exam'
+  | 'student-cbt-results'
   | 'styleguide'
 
 const MODULE_TITLES: Record<string, { title: string; subtitle: string; wave: string }> = {
@@ -142,6 +165,7 @@ const TEACHER_NAV_ITEMS: SidebarNavItem[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
   { id: 'scores', label: 'Score Entry', icon: FileSpreadsheet },
   { id: 'assignments', label: 'Assignments', icon: BookOpen },
+  { id: 'cbt', label: 'Tests (CBT)', icon: Laptop },
   { id: 'announcements', label: 'Announcements', icon: Megaphone },
 ]
 
@@ -158,6 +182,7 @@ const CLASS_TEACHER_NAV_ITEMS: SidebarNavItem[] = [
   { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
   { id: 'tracker', label: 'Submission Tracker', icon: ClipboardList },
   { id: 'broadsheet', label: 'Report Cards & Broadsheet', icon: Award },
+  { id: 'cbt', label: 'Tests (CBT)', icon: Laptop },
   { id: 'announcements', label: 'Announcements', icon: Megaphone },
 ]
 
@@ -185,9 +210,10 @@ const PARENT_MOBILE_TABS = [
   { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
 ]
 
-// Student Navigation Items (Wave 7)
+// Student Navigation Items (Wave 7 & Wave 10)
 const STUDENT_NAV_ITEMS: SidebarNavItem[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'cbt', label: 'Tests (CBT)', icon: Laptop },
   { id: 'results', label: 'My Results', icon: Award },
   { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
   { id: 'assignments', label: 'Assignments', icon: BookOpen },
@@ -243,6 +269,80 @@ function App() {
   const [isAddAssignmentModalOpen, setIsAddAssignmentModalOpen] = useState(false)
   const [selectedScoreClassId, setSelectedScoreClassId] = useState('jss2a-math')
 
+  // Wave 10 — CBT State
+  const [cbtTests, setCbtTests] = useState<CbtTest[]>(INITIAL_CBT_TESTS)
+  const [cbtResults, setCbtResults] = useState<StudentCbtSubmission[]>(INITIAL_CBT_RESULTS)
+  const [editingCbtTest, setEditingCbtTest] = useState<CbtTest | null>(null)
+  const [viewingTeacherCbtResultTest, setViewingTeacherCbtResultTest] = useState<CbtTest | null>(null)
+  const [activeExamTest, setActiveExamTest] = useState<CbtTest | null>(null)
+  const [viewingStudentCbtResult, setViewingStudentCbtResult] = useState<{
+    test: CbtTest
+    submission: StudentCbtSubmission
+  } | null>(null)
+
+  const handleSaveCbtTest = (savedTest: CbtTest, publish: boolean) => {
+    const testToSave: CbtTest = {
+      ...savedTest,
+      status: publish ? 'live' : savedTest.status || 'draft',
+      isPublished: publish ? true : savedTest.isPublished,
+    }
+    setCbtTests((prev) => {
+      const exists = prev.some((t) => t.id === testToSave.id)
+      if (exists) {
+        return prev.map((t) => (t.id === testToSave.id ? testToSave : t))
+      }
+      return [testToSave, ...prev]
+    })
+    setEditingCbtTest(null)
+    setCurrentView('teacher-cbt-list')
+  }
+
+  const handleDeleteCbtTest = (testId: string) => {
+    if (confirm('Are you sure you want to delete this CBT assessment?')) {
+      setCbtTests((prev) => prev.filter((t) => t.id !== testId))
+    }
+  }
+
+  const handleStudentExamSubmit = (
+    testAnswers: Record<number, number>,
+    timeTakenMinutes: number
+  ) => {
+    const currentTest = activeExamTest || cbtTests[0]
+    let earnedPoints = 0
+    currentTest.questions.forEach((q, idx) => {
+      if (testAnswers[idx] === q.correctOptionIndex) {
+        earnedPoints += q.points
+      }
+    })
+
+    const newSub: StudentCbtSubmission = {
+      id: `sub-${Date.now()}`,
+      testId: currentTest.id,
+      studentName: 'Fatima Bello',
+      admissionNo: 'JSS2/003',
+      score: earnedPoints,
+      totalPoints: currentTest.totalPoints,
+      timeTakenMinutes,
+      status: 'completed',
+      answers: testAnswers,
+      submittedAt:
+        new Date().toLocaleDateString('en-GB', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        }) +
+        ', ' +
+        new Date().toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+    }
+
+    setCbtResults((prev) => [newSub, ...prev])
+    setViewingStudentCbtResult({ test: currentTest, submission: newSub })
+    setCurrentView('student-cbt-results')
+  }
+
   // Navigate within admin dashboard
   const handleAdminNavigate = (navId: string) => {
     setActiveAdminNavId(navId)
@@ -268,6 +368,8 @@ function App() {
       setCurrentView('teacher-scores')
     } else if (navId === 'assignments') {
       setCurrentView('teacher-assignments')
+    } else if (navId === 'cbt') {
+      setCurrentView('teacher-cbt-list')
     } else if (navId === 'announcements') {
       setCurrentView('teacher-announcements')
     }
@@ -286,6 +388,8 @@ function App() {
       setCurrentView('class-teacher-tracker')
     } else if (navId === 'broadsheet') {
       setCurrentView('class-teacher-broadsheet')
+    } else if (navId === 'cbt') {
+      setCurrentView('teacher-cbt-list')
     } else if (navId === 'announcements') {
       setCurrentView('class-teacher-announcements')
     }
@@ -309,11 +413,13 @@ function App() {
     }
   }
 
-  // Navigate within student dashboard (Wave 7)
+  // Navigate within student dashboard (Wave 7 & Wave 10)
   const handleStudentNavigate = (navId: string) => {
     setActiveStudentNavId(navId)
     if (navId === 'overview') {
       setCurrentView('student-overview')
+    } else if (navId === 'cbt') {
+      setCurrentView('student-cbt-list')
     } else if (navId === 'results') {
       setCurrentView('student-results')
     } else if (navId === 'attendance') {
@@ -662,6 +768,43 @@ function App() {
 
         <span className="w-px h-4 bg-white/20 mx-0.5" />
 
+        {/* Wave 10 CBT Links */}
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTeacherNavId('cbt')
+            setCurrentView('teacher-cbt-list')
+          }}
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView.startsWith('teacher-cbt')
+              ? 'bg-indigo-brand text-white shadow-sm'
+              : 'hover:bg-white/10 text-gray-300'
+          }`}
+          title="Wave 10: Teacher CBT Question Bank"
+        >
+          <Laptop className="w-3.5 h-3.5 text-sky-300" />
+          <span className="hidden sm:inline">Teacher CBT</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveStudentNavId('cbt')
+            setCurrentView('student-cbt-list')
+          }}
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView.startsWith('student-cbt')
+              ? 'bg-indigo-brand text-white shadow-sm'
+              : 'hover:bg-white/10 text-gray-300'
+          }`}
+          title="Wave 10: Student CBT Examination Portal"
+        >
+          <Laptop className="w-3.5 h-3.5 text-emerald-300" />
+          <span className="hidden sm:inline">Student CBT</span>
+        </button>
+
+        <span className="w-px h-4 bg-white/20 mx-0.5" />
+
         <button
           type="button"
           onClick={() => setCurrentView('styleguide')}
@@ -984,6 +1127,86 @@ function App() {
               </p>
             </div>
           </Card>
+        </DashboardLayout>
+      )}
+
+      {/* WAVE 10 — VIEW: SUBJECT TEACHER CBT LIST */}
+      {currentView === 'teacher-cbt-list' && (
+        <DashboardLayout
+          activeNavId="cbt"
+          onNavigate={handleTeacherNavigate}
+          navItems={TEACHER_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Subject Teacher"
+          userName="Mrs. Bola Adeyemi"
+          userRole="Mathematics & Physics Faculty"
+          mobileNavTabs={TEACHER_MOBILE_TABS}
+          pageTitle="Computer-Based Testing (CBT) Assessments"
+          pageSubtitle="Create, schedule, and grade timed computer-based tests and continuous assessments."
+          onLogout={() => setCurrentView('login')}
+        >
+          <TeacherCbtListPage
+            tests={cbtTests}
+            onCreateTest={() => {
+              setEditingCbtTest(null)
+              setCurrentView('teacher-cbt-builder')
+            }}
+            onEditTest={(test) => {
+              setEditingCbtTest(test)
+              setCurrentView('teacher-cbt-builder')
+            }}
+            onViewResults={(test) => {
+              setViewingTeacherCbtResultTest(test)
+              setCurrentView('teacher-cbt-results')
+            }}
+            onDeleteTest={handleDeleteCbtTest}
+          />
+        </DashboardLayout>
+      )}
+
+      {/* WAVE 10 — VIEW: SUBJECT TEACHER CBT BUILDER */}
+      {currentView === 'teacher-cbt-builder' && (
+        <DashboardLayout
+          activeNavId="cbt"
+          onNavigate={handleTeacherNavigate}
+          navItems={TEACHER_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Subject Teacher"
+          userName="Mrs. Bola Adeyemi"
+          userRole="Mathematics & Physics Faculty"
+          mobileNavTabs={TEACHER_MOBILE_TABS}
+          pageTitle={editingCbtTest ? 'Edit CBT Assessment' : 'New CBT Assessment Paper'}
+          pageSubtitle="Configure test timing, upload questions with optional diagrams, and set correct answer keys."
+          onLogout={() => setCurrentView('login')}
+        >
+          <TeacherCbtBuilderPage
+            initialTest={editingCbtTest}
+            onSaveTest={handleSaveCbtTest}
+            onCancel={() => setCurrentView('teacher-cbt-list')}
+          />
+        </DashboardLayout>
+      )}
+
+      {/* WAVE 10 — VIEW: SUBJECT TEACHER CBT RESULTS & ANALYTICS */}
+      {currentView === 'teacher-cbt-results' && (
+        <DashboardLayout
+          activeNavId="cbt"
+          onNavigate={handleTeacherNavigate}
+          navItems={TEACHER_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Subject Teacher"
+          userName="Mrs. Bola Adeyemi"
+          userRole="Mathematics & Physics Faculty"
+          mobileNavTabs={TEACHER_MOBILE_TABS}
+          pageTitle="CBT Assessment Results & Analytics"
+          pageSubtitle="Review student candidate performance, score distribution, and question completion rates."
+          onLogout={() => setCurrentView('login')}
+        >
+          <TeacherCbtResultsPage
+            test={viewingTeacherCbtResultTest || cbtTests[2]}
+            results={cbtResults}
+            onBack={() => setCurrentView('teacher-cbt-list')}
+          />
         </DashboardLayout>
       )}
 
@@ -1547,6 +1770,82 @@ function App() {
           onLogout={() => setCurrentView('login')}
         >
           <StudentAiPage studentName="Fatima Bello" classNameTitle="JSS 2A" />
+        </DashboardLayout>
+      )}
+
+      {/* ======================================================== */}
+      {/* WAVE 10 — STUDENT CBT VIEWS                              */}
+      {/* ======================================================== */}
+
+      {/* STUDENT CBT TEST LIST */}
+      {currentView === 'student-cbt-list' && (
+        <DashboardLayout
+          activeNavId="cbt"
+          onNavigate={handleStudentNavigate}
+          navItems={STUDENT_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Student • JSS 2A"
+          userName="Fatima Bello"
+          userRole="Student • Class JSS 2A (Adm: JSS2/003)"
+          mobileNavTabs={STUDENT_MOBILE_TABS}
+          pageTitle="Computer-Based Testing (CBT) Portal"
+          pageSubtitle="Take timed school assessments, practice mock exams, and view graded result sheets."
+          onLogout={() => setCurrentView('login')}
+        >
+          <StudentCbtListPage
+            tests={cbtTests}
+            studentSubmissions={cbtResults}
+            currentStudentAdmissionNo="JSS2/003"
+            onStartTest={(test) => {
+              setActiveExamTest(test)
+              setCurrentView('student-cbt-exam')
+            }}
+            onViewResult={(test, sub) => {
+              setViewingStudentCbtResult({ test, submission: sub })
+              setCurrentView('student-cbt-results')
+            }}
+          />
+        </DashboardLayout>
+      )}
+
+      {/* STUDENT CBT EXAM VIEW (FULL-SCREEN MODE: OUTSIDE DASHBOARD LAYOUT!) */}
+      {currentView === 'student-cbt-exam' && (
+        <StudentCbtExamView
+          test={activeExamTest || cbtTests[0]}
+          studentName="Fatima Bello"
+          admissionNo="JSS2/003"
+          onSubmit={handleStudentExamSubmit}
+          onExit={() => setCurrentView('student-cbt-list')}
+        />
+      )}
+
+      {/* STUDENT CBT RESULTS PAGE */}
+      {currentView === 'student-cbt-results' && (
+        <DashboardLayout
+          activeNavId="cbt"
+          onNavigate={handleStudentNavigate}
+          navItems={STUDENT_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Student • JSS 2A"
+          userName="Fatima Bello"
+          userRole="Student • Class JSS 2A (Adm: JSS2/003)"
+          mobileNavTabs={STUDENT_MOBILE_TABS}
+          pageTitle="Examination Results & Script Review"
+          pageSubtitle="Official student performance score sheet and question-by-question analysis."
+          onLogout={() => setCurrentView('login')}
+        >
+          <StudentCbtResultsPage
+            test={
+              viewingStudentCbtResult?.test ||
+              activeExamTest ||
+              cbtTests[0]
+            }
+            submission={
+              viewingStudentCbtResult?.submission ||
+              cbtResults[0]
+            }
+            onBack={() => setCurrentView('student-cbt-list')}
+          />
         </DashboardLayout>
       )}
 
