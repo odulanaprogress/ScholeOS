@@ -1,7 +1,7 @@
 # ScholeOS — Engineering Handbook & Developer Notes
 
 > **Platform:** ScholeOS — Modern Operating System & Management Platform for Schools  
-> **Status:** ✅ Wave 1 through Wave 7 COMPLETE · Ready for Wave 8 (Fees & Payments UI)  
+> **Status:** ✅ Wave 1 through Wave 8 COMPLETE · Ready for Wave 9 (AI Assistant Panels)  
 > **Last Updated:** September 2026  
 > **Lead Architect:** Senior Frontend Engineer
 
@@ -20,8 +20,8 @@ ScholeOS is constructed in sequential, self-contained **Waves**. Each wave estab
 | **Wave 5** | **Subject Teacher Dashboard** | Gradebook, score entry grid, continuous assessment (CA), bulk uploads, audit trails | 🟢 **COMPLETED** |
 | **Wave 6** | **Class Teacher Dashboard** | Daily attendance tracker, submission monitor, broadsheet generation, term report cards | 🟢 **COMPLETED** |
 | **Wave 7** | **Parent & Student Views** | Child switcher, progress tracking, fee payments & receipts, shared attendance & results, homework submissions, weekly timetable | 🟢 **COMPLETED** |
-| **Wave 8** | **Fees & Payments UI** | Invoicing, payment gateway integration (cards/transfers), payment history, receipts | ⚪ Next Up |
-| **Wave 9** | **AI Assistant Panels** | Administrative automation copilot, student learning tutor, analytics insights | ⚪ Queued |
+| **Wave 8** | **Fees & Payments UI** | Institutional fee structures, class scoping, arrears tracking, sort/filter, reminders, bank transfer proof reconciliation | 🟢 **COMPLETED** |
+| **Wave 9** | **AI Assistant Panels** | Administrative automation copilot, student learning tutor, analytics insights | ⚪ Next Up |
 
 ---
 
@@ -370,5 +370,65 @@ Wave 7 introduces specialized portals for **Parents** and **Students**, built on
   - AI Tutor placeholder captured: `student_dashboard_ai_tutor_1788696959925.png`
 - **[2026-09-06]**: **Wave 7 is complete and verified! Ready for Wave 8 (Fees & Payments UI).**
 
+---
 
+## 12. Wave 8 — Admin Fees & Payments UI Architecture & Implementation
 
+Wave 8 establishes the complete institutional **Fees & Payments Management** suite for school administrators, living under the `"fees"` sidebar navigation item inside `DashboardLayout`. It implements three interconnected sub-views managed via a top `Tabs` control:
+
+### Part A — Fee Structure Tab (`pages/admin/fees/FeeStructureTab.tsx`)
+- **Configured Fees Roster Table**:
+  - Columns: Fee Name & Description, Amount (₦), Applies To (All Classes or class pills), Due Date, and Actions (Edit button).
+  - Displays recurring type badges (`Per-Term Recurring` in primary indigo vs. `One-Time Fee` in warm gold) and active student enrolment counts.
+- **Add / Edit Fee Type Modal (`size="lg"`)**:
+  - Fee Name (`Input`).
+  - Amount (number input with currency symbol `₦`).
+  - Applies To toggle ("All Classes" vs "Specific Class").
+  - Dynamic Class Selector: When "Specific Class" is active, reveals multi-select pills for all secondary & primary arms with "Select All" and "Clear" shortcuts.
+  - Statutory Due Date (`DatePicker`).
+  - Billing Cycle selector (`Per-Term` vs `One-Time`).
+  - Full support for creating new fees or updating existing fee amounts and due dates with instant table refresh.
+
+### Part B — Arrears & Debtors Tab (`pages/admin/fees/ArrearsTab.tsx`)
+- **Metric StatCards**:
+  - *Total Arrears*: ₦660,000 (warning tone, trend: -8.4% vs last month).
+  - *Students in Arrears*: 8 debtors (danger tone, across 8 class arms).
+  - *Collection Rate*: 84.6% (success emerald tone, ₦18.4M collected of ₦21.8M billed).
+- **Filter & Sort Controls**:
+  - Keyword search input across student name, parent/guardian name, and class arm.
+  - Class arm filter dropdown (`All Classes`, `JSS 1`, `JSS 2A`, `SSS 1 Science`, etc.).
+  - "Amount Owed" sort toggle (`Highest First` ⇄ `Lowest First`).
+- **Debtors Table & Send Reminder Action**:
+  - Displays Student Name, Guardian Name & Phone, Class Arm, Amount Owed (₦), Academic Term, and Last Payment Date.
+  - One-click "Send Reminder" button dispatches automated SMS & email notices to the parent, updates button state to `Sent ✓` with checkmark, and triggers feedback toast.
+
+### Part C — Payment Verification Tab (`pages/admin/fees/PaymentVerificationTab.tsx`)
+- **Manual Reconciliation Queue**:
+  - Dynamic pending count badge displayed on the master tab header (`badge: verifications.length, badgeVariant: 'warning'`).
+  - Table of pending bank-transfer submissions: Student Name & Class, Fee Type, Bank Name, Amount Claimed, Date Submitted, "View Proof" action, and Actions (Approve & Reject).
+- **View Proof Modal (`size="lg"`)**:
+  - Displays high-fidelity bank transfer receipt simulation (Zenith Bank, GTBank, Access Bank, OPay) complete with transaction reference, session ID, transfer status `TRANSFER SUCCESSFUL`, sender account, receiving school account, timestamp, and parent notes.
+- **Approve Payment Modal**:
+  - Confirmation dialog: *"Confirm payment of ₦[Amount] for [Student]? This will mark the invoice as Paid."*
+  - On confirm: removes submission from the verification queue, marks invoice as Paid, deducts/clears arrears, updates pending tab badge, and triggers success toast.
+- **Reject Payment Modal**:
+  - Required rejection reason textarea with quick preset suggestion chips (*"Amount paid does not match invoice billing"*, *"Bank transfer receipt image is blurred/illegible"*, *"Transaction reference not yet credited to school account"*, *"Duplicate payment submission"*).
+  - Enforces non-empty reason validation before dispatching rejection alert to the parent and removing from queue.
+
+---
+
+## 13. Verification Log
+
+- **[2026-09-06]**: Created fees data models, types, and mock datasets in `pages/admin/fees/feesData.ts`.
+- **[2026-09-06]**: Built `FeeStructureTab.tsx` with fee types table, Add Fee Type modal, class multi-select pills, and edit support.
+- **[2026-09-06]**: Built `ArrearsTab.tsx` with StatCards, class filter, sort toggle, and Send Reminder action with `Sent ✓` state.
+- **[2026-09-06]**: Built `PaymentVerificationTab.tsx` with pending table, full-size bank receipt modal, Approve confirmation modal, and Reject modal with required reason textarea.
+- **[2026-09-06]**: Built master `AdminFeesPage.tsx` with top Tabs, pending count badge, and floating toast notification dock.
+- **[2026-09-06]**: Integrated `AdminFeesPage` into `App.tsx` router under `'admin-fees'`, wired into sidebar `"fees"` navigation, and added reviewer switcher dock button.
+- **[2026-09-06]**: Executed production build: `npm run build` (`tsc -b && vite build`) — **0 errors**, built in **10.55s** (1,923 modules transformed).
+- **[2026-09-06]**: Executed interactive browser subagent testing:
+  - Added new fee type "Examination & WAEC Registration" (₦45,000 for SSS 3).
+  - Edited "PTA Development Levy" from ₦15,000 to ₦20,000.
+  - Tested Arrears class filter (JSS 2A) and sent reminder to Farouk Bello (screenshot: `arrears_tab_verified_1788699131014.png`, recording: `arrears_tab_check_1788698876979.webp`).
+  - Tested Payment Verification queue: viewed Fatima Bello's bank slip, approved payment, confirmed row removed and badge counter updated (recording: `admin_fees_verification_1788698216249.webp`).
+- **[2026-09-06]**: **Wave 8 is complete and verified! Ready for Wave 9 (AI Assistant Panels).**

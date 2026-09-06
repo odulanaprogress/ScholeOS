@@ -6,6 +6,7 @@ import { StyleGuidePage } from '@/pages/StyleGuidePage'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { OverviewPage } from '@/pages/admin/OverviewPage'
 import { StaffManagementPage } from '@/pages/admin/StaffManagementPage'
+import { AdminFeesPage } from '@/pages/admin'
 import {
   TeacherOverviewPage,
   type TeacherAssignment,
@@ -65,6 +66,7 @@ type AppView =
   | 'onboarding'
   | 'admin-overview'
   | 'admin-staff'
+  | 'admin-fees'
   | 'admin-other'
   | 'teacher-overview'
   | 'teacher-scores'
@@ -246,6 +248,8 @@ function App() {
       setCurrentView('admin-overview')
     } else if (navId === 'staff') {
       setCurrentView('admin-staff')
+    } else if (navId === 'fees') {
+      setCurrentView('admin-fees')
     } else {
       setCurrentView('admin-other')
     }
@@ -383,6 +387,23 @@ function App() {
         >
           <LayoutDashboard className="w-3.5 h-3.5 text-emerald-400" />
           <span className="hidden sm:inline">Admin</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveAdminNavId('fees')
+            setCurrentView('admin-fees')
+          }}
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView === 'admin-fees'
+              ? 'bg-indigo-brand text-white shadow-sm'
+              : 'hover:bg-white/10 text-gray-300'
+          }`}
+          title="Wave 8: Admin Fees & Payments"
+        >
+          <CreditCard className="w-3.5 h-3.5 text-amber-300" />
+          <span className="hidden sm:inline">Fees</span>
         </button>
 
         <span className="w-px h-4 bg-white/20 mx-0.5" />
@@ -708,6 +729,19 @@ function App() {
             isAddStaffOpen={isAddStaffModalOpen}
             onAddStaffOpenChange={setIsAddStaffModalOpen}
           />
+        </DashboardLayout>
+      )}
+
+      {/* VIEW: ADMIN FEES MANAGEMENT PAGE (WAVE 8) */}
+      {currentView === 'admin-fees' && (
+        <DashboardLayout
+          activeNavId="fees"
+          onNavigate={handleAdminNavigate}
+          pageTitle="Fees & Payments Management"
+          pageSubtitle="Configure fee structures, track arrears & collections, and reconcile bank transfer payment proofs."
+          onLogout={() => setCurrentView('login')}
+        >
+          <AdminFeesPage />
         </DashboardLayout>
       )}
 
