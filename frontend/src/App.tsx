@@ -18,6 +18,20 @@ import {
   SubmissionTrackerPage,
   BroadsheetPage,
 } from '@/pages/class-teacher'
+import {
+  ParentOverviewPage,
+  ParentAttendancePage,
+  ParentResultsPage,
+  ParentFeesPage,
+  PARENT_CHILDREN,
+  PARENT_ANNOUNCEMENTS,
+} from '@/pages/parent'
+import {
+  StudentOverviewPage,
+  StudentAssignmentsPage,
+  StudentTimetablePage,
+} from '@/pages/student'
+import { AiComingSoonPage } from '@/pages/AiComingSoonPage'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -39,6 +53,10 @@ import {
   ClipboardList,
   Award,
   Users,
+  CreditCard,
+  CalendarDays,
+  Bot,
+  UserCheck,
 } from 'lucide-react'
 
 type AppView =
@@ -58,6 +76,18 @@ type AppView =
   | 'class-teacher-tracker'
   | 'class-teacher-broadsheet'
   | 'class-teacher-announcements'
+  | 'parent-overview'
+  | 'parent-attendance'
+  | 'parent-results'
+  | 'parent-fees'
+  | 'parent-announcements'
+  | 'parent-ai'
+  | 'student-overview'
+  | 'student-results'
+  | 'student-attendance'
+  | 'student-assignments'
+  | 'student-timetable'
+  | 'student-ai'
   | 'styleguide'
 
 const MODULE_TITLES: Record<string, { title: string; subtitle: string; wave: string }> = {
@@ -134,6 +164,40 @@ const CLASS_TEACHER_MOBILE_TABS = [
   { id: 'tracker', label: 'Tracker', icon: ClipboardList },
 ]
 
+// Parent Navigation Items (Wave 7)
+const PARENT_NAV_ITEMS: SidebarNavItem[] = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
+  { id: 'results', label: 'Results', icon: Award },
+  { id: 'fees', label: 'Fees & Payments', icon: CreditCard },
+  { id: 'announcements', label: 'Announcements', icon: Megaphone },
+  { id: 'ai-assistant', label: 'AI Assistant', icon: Sparkles },
+]
+
+const PARENT_MOBILE_TABS = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'results', label: 'Results', icon: Award },
+  { id: 'fees', label: 'Fees', icon: CreditCard },
+  { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
+]
+
+// Student Navigation Items (Wave 7)
+const STUDENT_NAV_ITEMS: SidebarNavItem[] = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'results', label: 'My Results', icon: Award },
+  { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
+  { id: 'assignments', label: 'Assignments', icon: BookOpen },
+  { id: 'timetable', label: 'Timetable', icon: CalendarDays },
+  { id: 'ai-tutor', label: 'AI Tutor', icon: Bot },
+]
+
+const STUDENT_MOBILE_TABS = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'assignments', label: 'Tasks', icon: BookOpen },
+  { id: 'timetable', label: 'Schedule', icon: CalendarDays },
+  { id: 'results', label: 'Results', icon: Award },
+]
+
 const INITIAL_TEACHER_ASSIGNMENTS: TeacherAssignment[] = [
   {
     id: 'jss2a-math',
@@ -166,6 +230,9 @@ function App() {
   const [activeAdminNavId, setActiveAdminNavId] = useState<string>('overview')
   const [activeTeacherNavId, setActiveTeacherNavId] = useState<string>('overview')
   const [activeClassTeacherNavId, setActiveClassTeacherNavId] = useState<string>('overview')
+  const [selectedParentChildId, setSelectedParentChildId] = useState<string>('child-1')
+  const [activeParentNavId, setActiveParentNavId] = useState<string>('overview')
+  const [activeStudentNavId, setActiveStudentNavId] = useState<string>('overview')
 
   // Shared state
   const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false)
@@ -213,6 +280,42 @@ function App() {
       setCurrentView('class-teacher-broadsheet')
     } else if (navId === 'announcements') {
       setCurrentView('class-teacher-announcements')
+    }
+  }
+
+  // Navigate within parent dashboard (Wave 7)
+  const handleParentNavigate = (navId: string) => {
+    setActiveParentNavId(navId)
+    if (navId === 'overview') {
+      setCurrentView('parent-overview')
+    } else if (navId === 'attendance') {
+      setCurrentView('parent-attendance')
+    } else if (navId === 'results') {
+      setCurrentView('parent-results')
+    } else if (navId === 'fees') {
+      setCurrentView('parent-fees')
+    } else if (navId === 'announcements') {
+      setCurrentView('parent-announcements')
+    } else if (navId === 'ai-assistant') {
+      setCurrentView('parent-ai')
+    }
+  }
+
+  // Navigate within student dashboard (Wave 7)
+  const handleStudentNavigate = (navId: string) => {
+    setActiveStudentNavId(navId)
+    if (navId === 'overview') {
+      setCurrentView('student-overview')
+    } else if (navId === 'results') {
+      setCurrentView('student-results')
+    } else if (navId === 'attendance') {
+      setCurrentView('student-attendance')
+    } else if (navId === 'assignments') {
+      setCurrentView('student-assignments')
+    } else if (navId === 'timetable') {
+      setCurrentView('student-timetable')
+    } else if (navId === 'ai-tutor') {
+      setCurrentView('student-ai')
     }
   }
 
@@ -406,6 +509,99 @@ function App() {
           <Award className="w-3.5 h-3.5 text-gold-brand" />
           <span className="hidden sm:inline">Broadsheet</span>
         </button>
+
+        <span className="w-px h-4 bg-white/20 mx-0.5" />
+
+        {/* Wave 7 Parent Dashboard Links */}
+        <button
+          type="button"
+          onClick={() => {
+            setActiveParentNavId('overview')
+            setCurrentView('parent-overview')
+          }}
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView.startsWith('parent')
+              ? 'bg-indigo-brand text-white shadow-sm'
+              : 'hover:bg-white/10 text-gray-300'
+          }`}
+          title="Wave 7: Parent Dashboard"
+        >
+          <UserCheck className="w-3.5 h-3.5 text-emerald-300" />
+          <span className="hidden sm:inline">Parent</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveParentNavId('fees')
+            setCurrentView('parent-fees')
+          }}
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView === 'parent-fees'
+              ? 'bg-indigo-brand text-white shadow-sm'
+              : 'hover:bg-white/10 text-gray-300'
+          }`}
+          title="Wave 7: Parent Fees & Invoices"
+        >
+          <CreditCard className="w-3.5 h-3.5 text-amber-300" />
+          <span className="hidden sm:inline">Fees</span>
+        </button>
+
+        <span className="w-px h-4 bg-white/20 mx-0.5" />
+
+        {/* Wave 7 Student Dashboard Links */}
+        <button
+          type="button"
+          onClick={() => {
+            setActiveStudentNavId('overview')
+            setCurrentView('student-overview')
+          }}
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView.startsWith('student')
+              ? 'bg-indigo-brand text-white shadow-sm'
+              : 'hover:bg-white/10 text-gray-300'
+          }`}
+          title="Wave 7: Student Dashboard"
+        >
+          <GraduationCap className="w-3.5 h-3.5 text-sky-300" />
+          <span className="hidden sm:inline">Student</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveStudentNavId('assignments')
+            setCurrentView('student-assignments')
+          }}
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView === 'student-assignments'
+              ? 'bg-indigo-brand text-white shadow-sm'
+              : 'hover:bg-white/10 text-gray-300'
+          }`}
+          title="Wave 7: Student Homework Tasks"
+        >
+          <BookOpen className="w-3.5 h-3.5 text-indigo-300" />
+          <span className="hidden sm:inline">Tasks</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveStudentNavId('timetable')
+            setCurrentView('student-timetable')
+          }}
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView === 'student-timetable'
+              ? 'bg-indigo-brand text-white shadow-sm'
+              : 'hover:bg-white/10 text-gray-300'
+          }`}
+          title="Wave 7: Student Weekly Timetable"
+        >
+          <CalendarDays className="w-3.5 h-3.5 text-gold-brand" />
+          <span className="hidden sm:inline">Schedule</span>
+        </button>
+
+        <span className="w-px h-4 bg-white/20 mx-0.5" />
 
         <button
           type="button"
@@ -894,6 +1090,374 @@ function App() {
               </p>
             </div>
           </Card>
+        </DashboardLayout>
+      )}
+
+      {/* ======================================================== */}
+      {/* WAVE 7 — PARENT DASHBOARD VIEWS                          */}
+      {/* ======================================================== */}
+
+      {/* PARENT OVERVIEW */}
+      {currentView === 'parent-overview' && (
+        <DashboardLayout
+          activeNavId={activeParentNavId}
+          onNavigate={handleParentNavigate}
+          navItems={PARENT_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Parent Portal"
+          userName="Alhaji Dr. S. Bello"
+          userRole="Parent • 2 Enrolled Children"
+          mobileNavTabs={PARENT_MOBILE_TABS}
+          pageTitle="Parent Dashboard"
+          pageSubtitle="Crown Academy Lagos • Student academic records, fee invoicing, and attendance portal"
+          headerAction={
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => handleParentNavigate('results')}
+            >
+              <Award className="w-4 h-4 mr-1.5" />
+              View Results
+            </Button>
+          }
+          onLogout={() => setCurrentView('login')}
+        >
+          <ParentOverviewPage
+            childrenList={PARENT_CHILDREN}
+            selectedChildId={selectedParentChildId}
+            onSelectChild={setSelectedParentChildId}
+            announcements={PARENT_ANNOUNCEMENTS}
+            onNavigateToAttendance={() => handleParentNavigate('attendance')}
+            onNavigateToResults={() => handleParentNavigate('results')}
+            onNavigateToFees={() => handleParentNavigate('fees')}
+          />
+        </DashboardLayout>
+      )}
+
+      {/* PARENT ATTENDANCE */}
+      {currentView === 'parent-attendance' && (
+        <DashboardLayout
+          activeNavId={activeParentNavId}
+          onNavigate={handleParentNavigate}
+          navItems={PARENT_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Parent Portal"
+          userName="Alhaji Dr. S. Bello"
+          userRole="Parent • 2 Enrolled Children"
+          mobileNavTabs={PARENT_MOBILE_TABS}
+          pageTitle="Student Attendance History"
+          pageSubtitle="Daily roll call registers, arrival timestamps, and excused absences"
+          headerAction={
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => handleParentNavigate('overview')}
+            >
+              ← Back to Overview
+            </Button>
+          }
+          onLogout={() => setCurrentView('login')}
+        >
+          <ParentAttendancePage
+            childrenList={PARENT_CHILDREN}
+            selectedChildId={selectedParentChildId}
+            onSelectChild={setSelectedParentChildId}
+            showChildSwitcher={true}
+          />
+        </DashboardLayout>
+      )}
+
+      {/* PARENT RESULTS */}
+      {currentView === 'parent-results' && (
+        <DashboardLayout
+          activeNavId={activeParentNavId}
+          onNavigate={handleParentNavigate}
+          navItems={PARENT_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Parent Portal"
+          userName="Alhaji Dr. S. Bello"
+          userRole="Parent • 2 Enrolled Children"
+          mobileNavTabs={PARENT_MOBILE_TABS}
+          pageTitle="Terminal Results & Report Cards"
+          pageSubtitle="Official broadsheets, continuous assessment breakdown, and principal certification"
+          headerAction={
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => handleParentNavigate('fees')}
+            >
+              <CreditCard className="w-4 h-4 mr-1.5" />
+              Check School Fees
+            </Button>
+          }
+          onLogout={() => setCurrentView('login')}
+        >
+          <ParentResultsPage
+            childrenList={PARENT_CHILDREN}
+            selectedChildId={selectedParentChildId}
+            onSelectChild={setSelectedParentChildId}
+            showChildSwitcher={true}
+          />
+        </DashboardLayout>
+      )}
+
+      {/* PARENT FEES & PAYMENTS */}
+      {currentView === 'parent-fees' && (
+        <DashboardLayout
+          activeNavId={activeParentNavId}
+          onNavigate={handleParentNavigate}
+          navItems={PARENT_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Parent Portal"
+          userName="Alhaji Dr. S. Bello"
+          userRole="Parent • 2 Enrolled Children"
+          mobileNavTabs={PARENT_MOBILE_TABS}
+          pageTitle="School Fees & Invoices"
+          pageSubtitle="Term fees billing, online card payments, and bank transfer receipt upload verification"
+          headerAction={
+            <Badge variant="primary" size="sm">
+              Term 2 • 2025/2026
+            </Badge>
+          }
+          onLogout={() => setCurrentView('login')}
+        >
+          <ParentFeesPage
+            childrenList={PARENT_CHILDREN}
+            selectedChildId={selectedParentChildId}
+            onSelectChild={setSelectedParentChildId}
+          />
+        </DashboardLayout>
+      )}
+
+      {/* PARENT ANNOUNCEMENTS */}
+      {currentView === 'parent-announcements' && (
+        <DashboardLayout
+          activeNavId={activeParentNavId}
+          onNavigate={handleParentNavigate}
+          navItems={PARENT_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Parent Portal"
+          userName="Alhaji Dr. S. Bello"
+          userRole="Parent • 2 Enrolled Children"
+          mobileNavTabs={PARENT_MOBILE_TABS}
+          pageTitle="School Notices & Announcements"
+          pageSubtitle="PTA circulars, calendar notifications, and official directives"
+          onLogout={() => setCurrentView('login')}
+        >
+          <div className="space-y-4 max-w-3xl">
+            {PARENT_ANNOUNCEMENTS.map((ann) => (
+              <Card key={ann.id} className="p-5 space-y-2 border-cream-border">
+                <div className="flex items-center justify-between gap-2 border-b border-cream-border pb-2">
+                  <span className="font-bold text-sm text-charcoal-dark">{ann.title}</span>
+                  <span className="text-[11px] text-charcoal-muted font-mono">{ann.date}</span>
+                </div>
+                <p className="text-xs text-charcoal-muted leading-relaxed">{ann.content}</p>
+                <div className="pt-1 text-[11px] text-indigo-700 font-semibold">
+                  Source: {ann.author}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </DashboardLayout>
+      )}
+
+      {/* PARENT AI ASSISTANT PLACEHOLDER */}
+      {currentView === 'parent-ai' && (
+        <DashboardLayout
+          activeNavId={activeParentNavId}
+          onNavigate={handleParentNavigate}
+          navItems={PARENT_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Parent Portal"
+          userName="Alhaji Dr. S. Bello"
+          userRole="Parent • 2 Enrolled Children"
+          mobileNavTabs={PARENT_MOBILE_TABS}
+          pageTitle="ScholeOS Parent AI Assistant"
+          pageSubtitle="Interactive school query copilot scheduled for Wave 9"
+          onLogout={() => setCurrentView('login')}
+        >
+          <AiComingSoonPage
+            title="Parent AI Copilot"
+            subtitle="Ask questions about term dates, fee receipts, and performance summaries in natural language."
+            role="parent"
+            onBack={() => handleParentNavigate('overview')}
+          />
+        </DashboardLayout>
+      )}
+
+      {/* ======================================================== */}
+      {/* WAVE 7 — STUDENT DASHBOARD VIEWS                         */}
+      {/* ======================================================== */}
+
+      {/* STUDENT OVERVIEW */}
+      {currentView === 'student-overview' && (
+        <DashboardLayout
+          activeNavId={activeStudentNavId}
+          onNavigate={handleStudentNavigate}
+          navItems={STUDENT_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Student • JSS 2A"
+          userName="Fatima Bello"
+          userRole="Student • Class JSS 2A (Adm: JSS2/003)"
+          mobileNavTabs={STUDENT_MOBILE_TABS}
+          pageTitle="Student Dashboard"
+          pageSubtitle="Welcome back, Fatima • Term 2 2025/2026 Academic Session"
+          headerAction={
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => handleStudentNavigate('assignments')}
+            >
+              <BookOpen className="w-4 h-4 mr-1.5" />
+              View Assignments
+            </Button>
+          }
+          onLogout={() => setCurrentView('login')}
+        >
+          <StudentOverviewPage
+            studentName="Fatima Bello"
+            classNameTitle="JSS 2A"
+            admissionNumber="JSS2/003"
+            onNavigateToResults={() => handleStudentNavigate('results')}
+            onNavigateToAssignments={() => handleStudentNavigate('assignments')}
+            onNavigateToTimetable={() => handleStudentNavigate('timetable')}
+            onNavigateToAttendance={() => handleStudentNavigate('attendance')}
+          />
+        </DashboardLayout>
+      )}
+
+      {/* STUDENT MY RESULTS (reusing ParentResultsPage scoped to student) */}
+      {currentView === 'student-results' && (
+        <DashboardLayout
+          activeNavId={activeStudentNavId}
+          onNavigate={handleStudentNavigate}
+          navItems={STUDENT_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Student • JSS 2A"
+          userName="Fatima Bello"
+          userRole="Student • Class JSS 2A (Adm: JSS2/003)"
+          mobileNavTabs={STUDENT_MOBILE_TABS}
+          pageTitle="My Academic Results"
+          pageSubtitle="Terminal report cards and WAEC standard grade records"
+          headerAction={
+            <Badge variant="primary" size="sm">
+              Term 2 • 2025/2026
+            </Badge>
+          }
+          onLogout={() => setCurrentView('login')}
+        >
+          <ParentResultsPage
+            selectedChildId="child-1"
+            showChildSwitcher={false}
+            studentName="Fatima Bello"
+            classNameTitle="JSS 2A"
+            admissionNumber="JSS2/003"
+          />
+        </DashboardLayout>
+      )}
+
+      {/* STUDENT ATTENDANCE (reusing ParentAttendancePage scoped to student) */}
+      {currentView === 'student-attendance' && (
+        <DashboardLayout
+          activeNavId={activeStudentNavId}
+          onNavigate={handleStudentNavigate}
+          navItems={STUDENT_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Student • JSS 2A"
+          userName="Fatima Bello"
+          userRole="Student • Class JSS 2A (Adm: JSS2/003)"
+          mobileNavTabs={STUDENT_MOBILE_TABS}
+          pageTitle="My Class Attendance"
+          pageSubtitle="Daily morning attendance roll record for JSS 2A"
+          headerAction={
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => handleStudentNavigate('overview')}
+            >
+              ← Back to Overview
+            </Button>
+          }
+          onLogout={() => setCurrentView('login')}
+        >
+          <ParentAttendancePage
+            selectedChildId="child-1"
+            showChildSwitcher={false}
+            studentName="Fatima Bello"
+            classNameTitle="JSS 2A"
+          />
+        </DashboardLayout>
+      )}
+
+      {/* STUDENT ASSIGNMENTS */}
+      {currentView === 'student-assignments' && (
+        <DashboardLayout
+          activeNavId={activeStudentNavId}
+          onNavigate={handleStudentNavigate}
+          navItems={STUDENT_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Student • JSS 2A"
+          userName="Fatima Bello"
+          userRole="Student • Class JSS 2A (Adm: JSS2/003)"
+          mobileNavTabs={STUDENT_MOBILE_TABS}
+          pageTitle="Coursework & Assignments"
+          pageSubtitle="Download teacher resources, submit homework solutions, and view graded scores"
+          headerAction={
+            <Badge variant="primary" size="sm">
+              Term 2
+            </Badge>
+          }
+          onLogout={() => setCurrentView('login')}
+        >
+          <StudentAssignmentsPage classNameTitle="JSS 2A" />
+        </DashboardLayout>
+      )}
+
+      {/* STUDENT TIMETABLE */}
+      {currentView === 'student-timetable' && (
+        <DashboardLayout
+          activeNavId={activeStudentNavId}
+          onNavigate={handleStudentNavigate}
+          navItems={STUDENT_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Student • JSS 2A"
+          userName="Fatima Bello"
+          userRole="Student • Class JSS 2A (Adm: JSS2/003)"
+          mobileNavTabs={STUDENT_MOBILE_TABS}
+          pageTitle="Weekly Class Timetable"
+          pageSubtitle="Monday through Friday periods, teacher allocations, and lab rooms for JSS 2A"
+          headerAction={
+            <Badge variant="primary" size="sm">
+              JSS 2A Schedule
+            </Badge>
+          }
+          onLogout={() => setCurrentView('login')}
+        >
+          <StudentTimetablePage classNameTitle="JSS 2A" />
+        </DashboardLayout>
+      )}
+
+      {/* STUDENT AI TUTOR PLACEHOLDER */}
+      {currentView === 'student-ai' && (
+        <DashboardLayout
+          activeNavId={activeStudentNavId}
+          onNavigate={handleStudentNavigate}
+          navItems={STUDENT_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Student • JSS 2A"
+          userName="Fatima Bello"
+          userRole="Student • Class JSS 2A (Adm: JSS2/003)"
+          mobileNavTabs={STUDENT_MOBILE_TABS}
+          pageTitle="ScholeOS AI Tutor"
+          pageSubtitle="Personalized interactive study assistant scheduled for Wave 9"
+          onLogout={() => setCurrentView('login')}
+        >
+          <AiComingSoonPage
+            title="ScholeOS AI Tutor"
+            subtitle="Your 24/7 personal learning copilot for solving homework, explaining difficult subjects, and practicing for exams."
+            role="student"
+            onBack={() => handleStudentNavigate('overview')}
+          />
         </DashboardLayout>
       )}
 

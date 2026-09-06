@@ -1,7 +1,7 @@
 # ScholeOS — Engineering Handbook & Developer Notes
 
 > **Platform:** ScholeOS — Modern Operating System & Management Platform for Schools  
-> **Status:** ✅ Wave 1 through Wave 6 COMPLETE · Ready for Wave 7 (Parent & Student Views)  
+> **Status:** ✅ Wave 1 through Wave 7 COMPLETE · Ready for Wave 8 (Fees & Payments UI)  
 > **Last Updated:** September 2026  
 > **Lead Architect:** Senior Frontend Engineer
 
@@ -19,8 +19,8 @@ ScholeOS is constructed in sequential, self-contained **Waves**. Each wave estab
 | **Wave 4** | **Admin Dashboard Shell** | Master layout, sidebar, quick stats, school metrics, user directory, announcements | 🟢 **COMPLETED** |
 | **Wave 5** | **Subject Teacher Dashboard** | Gradebook, score entry grid, continuous assessment (CA), bulk uploads, audit trails | 🟢 **COMPLETED** |
 | **Wave 6** | **Class Teacher Dashboard** | Daily attendance tracker, submission monitor, broadsheet generation, term report cards | 🟢 **COMPLETED** |
-| **Wave 7** | **Parent & Student Views** | Progress tracking, timetable, homework submissions, report card download, notifications | ⚪ Next Up |
-| **Wave 8** | **Fees & Payments UI** | Invoicing, payment gateway integration (cards/transfers), payment history, receipts | ⚪ Queued |
+| **Wave 7** | **Parent & Student Views** | Child switcher, progress tracking, fee payments & receipts, shared attendance & results, homework submissions, weekly timetable | 🟢 **COMPLETED** |
+| **Wave 8** | **Fees & Payments UI** | Invoicing, payment gateway integration (cards/transfers), payment history, receipts | ⚪ Next Up |
 | **Wave 9** | **AI Assistant Panels** | Administrative automation copilot, student learning tutor, analytics insights | ⚪ Queued |
 
 ---
@@ -292,5 +292,83 @@ Wave 6 equips Form Masters / Class Teachers with complete terminal management ov
 - **[2026-09-06]**: Interactive browser subagent test executed at `http://127.0.0.1:5173/` verifying Overview, Attendance, Tracker, Broadsheet, Report Card modal, and Publish & Lock flows.
 - **[2026-09-06]**: Captured screenshots and recorded browser session (`class_teacher_check_-62135596800000.webp`).
 - **[2026-09-06]**: **Wave 6 is complete and verified! Ready for Wave 7 (Parent & Student Views).**
+
+---
+
+## 10. Wave 7 — Parent & Student Dashboards Architecture & Implementation
+
+Wave 7 introduces specialized portals for **Parents** and **Students**, built on top of the established `DashboardLayout` shell from Wave 4, while reusing existing UI primitives without style drift.
+
+### Architectural Highlights & Component Reuse
+- **Shared Components**: The Student portal directly reuses `ParentResultsPage` and `ParentAttendancePage` by setting `showChildSwitcher={false}` and passing the active student identity.
+- **Child Switcher (`pages/parent/ChildSwitcher.tsx`)**: Responsive pill selector mounted above parent pages allowing instantaneous switching between multiple enrolled wards (`Fatima Bello — JSS 2A`, `Farouk Bello — Primary 4B`), updating attendance, results, and fee balances synchronously.
+- **Wave 9 AI Placeholders (`pages/AiComingSoonPage.tsx`)**: Elegant placeholder page for "AI Assistant" (Parent) and "AI Tutor" (Student) linking cleanly ahead of Wave 9.
+
+### Part A — Parent Dashboard (`pages/parent/`)
+1. **Parent Overview (`ParentOverviewPage.tsx`)**:
+   - Child switcher bar with avatar pills.
+   - **StatCards**:
+     - *Attendance This Term* (e.g. `94%`, Emerald tone, 42 Present · 3 Absent · 1 Late).
+     - *Fee Balance* (e.g. `₦45,000`, Amber warning tone if outstanding, `₦0` Emerald when cleared).
+     - *Latest Result* (e.g. `84.2% · 3rd in Class`, WAEC distinction indicator).
+   - Quick action shortcuts (Pay Fees, View Report Card, Full Attendance).
+   - School Announcements feed with priority badges (`Important`, `Event`, `General`).
+2. **Attendance History (`ParentAttendancePage.tsx`)**:
+   - Term summary status bar showing present/absent/late counts.
+   - Detailed date-by-date register table with filter by status (`All`, `Present`, `Absent`, `Late`).
+3. **Term Results & Broadsheet Archive (`ParentResultsPage.tsx`)**:
+   - Term-by-term card grid showing session, term, position, and publication status (`Published` green badge vs. `Pending` gray).
+   - **Interactive Report Card Modal (`size="xl"`)**:
+     - Official school header with student bio, admission number, and class rank.
+     - 8-subject WAEC breakdown table (CA Total /40, Exam /60, Total /100, WAEC Grade, Teacher Remark).
+     - Form Master qualitative comment and Principal sign-off stamp.
+     - "Download Report Card (PDF)" simulation action.
+4. **Fees & Payments Portal (`ParentFeesPage.tsx`)**:
+   - Overview StatCards: Total Outstanding, Amount Paid This Term, Next Due Date.
+   - Invoice itemization table with status badges (`Paid`, `Pending`, `Overdue`, `Pending Verification`).
+   - **"Pay Now" Modal**:
+     - Tabs for **Debit Card Payment** (instant simulation with card number, expiry, CVV) and **Direct Bank Transfer** (shows official school Wema/Zenith bank account details, reference code).
+     - Bank Transfer Proof Dropzone: Drag-and-drop receipt image upload (`.jpg`, `.png`, `.pdf`) with instant preview.
+     - Submitting proof immediately transitions the target invoice to `Pending Verification` with amber badge and updates outstanding balances.
+
+### Part B — Student Dashboard (`pages/student/`)
+1. **Student Overview (`StudentOverviewPage.tsx`)**:
+   - Personalized welcome header (`Fatima Bello — JSS 2A · Arts & Sciences`).
+   - StatCards: Term Attendance (`94%`), Pending Assignments (`2 Due This Week`), Latest Average (`84.2%`).
+   - Today's Class Schedule ticker.
+   - Upcoming Coursework alert card with direct "Start Submission" actions.
+2. **Student Assignments & Coursework (`StudentAssignmentsPage.tsx`)**:
+   - Filterable assignments table (Subject, Title, Due Date, Max Marks, Status badge).
+   - Status filters: `All`, `Pending`, `Submitted`, `Graded`.
+   - **Assignment Submission Modal**:
+     - Assignment instructions, due date, and attached teacher reference worksheet download.
+     - Student solution upload dropzone with file picker and text notes input.
+     - "Submit Assignment" action that updates coursework status to `Submitted` with green badge and submission timestamp.
+3. **Student Weekly Timetable (`StudentTimetablePage.tsx`)**:
+   - Monday through Friday 8-period weekly schedule matrix.
+   - Period-by-period color-coded blocks for core subjects, assemblies, and breaks.
+   - Current day / current period dynamic highlight indicator.
+   - "Download Timetable (PDF)" export action.
+
+---
+
+## 11. Verification Log
+
+- **[2026-09-06]**: Created Parent data models and mock state in `pages/parent/parentData.ts`.
+- **[2026-09-06]**: Built `ChildSwitcher.tsx` with responsive multi-child avatar toggle.
+- **[2026-09-06]**: Built `ParentOverviewPage.tsx`, `ParentAttendancePage.tsx`, `ParentResultsPage.tsx`, and `ParentFeesPage.tsx`.
+- **[2026-09-06]**: Built Student data models and coursework in `pages/student/studentData.ts`.
+- **[2026-09-06]**: Built `StudentOverviewPage.tsx`, `StudentAssignmentsPage.tsx` with submission modal, and `StudentTimetablePage.tsx`.
+- **[2026-09-06]**: Built Wave 9 placeholder component `AiComingSoonPage.tsx` for AI Assistant and AI Tutor.
+- **[2026-09-06]**: Integrated all routes and nav items into `App.tsx` with floating reviewer buttons (`Parent`, `Fees`, `Student`, `Tasks`, `Schedule`).
+- **[2026-09-06]**: Executed production build: `npm run build` (`tsc -b && vite build`) — **0 errors**, built cleanly in `23.87s` (1,916 modules transformed).
+- **[2026-09-06]**: Ran end-to-end browser verification subagents:
+  - Parent Portal session recorded: `parent_student_check_1788695762284.webp`
+  - Report Card modal captured: `report_card_modal_1788695973808.png`
+  - Fees bank transfer verification captured: `fees_cleared_1788696242557.png`
+  - Student Portal session recorded: `student_portal_check_1788696297899.webp`
+  - AI Tutor placeholder captured: `student_dashboard_ai_tutor_1788696959925.png`
+- **[2026-09-06]**: **Wave 7 is complete and verified! Ready for Wave 8 (Fees & Payments UI).**
+
 
 
