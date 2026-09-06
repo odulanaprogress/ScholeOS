@@ -11,8 +11,8 @@ ScholeOS handles results, continuous assessments, broadsheets, fee collection, a
 - [x] **Wave 1: Foundation & Design System** (Warm Cream, Indigo `#4338CA`, Gold `#D4A017`, Charcoal `#1E1B1A`, Poppins & Inter typography, 7 core UI primitives, interactive Style Guide)
 - [x] **Wave 2: Public Marketing Landing Page** (Hero with retina Dashboard Mockup, Stats bar, Feature cards, ScholeOS Advantage grid, CTA banner, FAQ Accordion, Footer, Demo Booking Modal)
 - [x] **Wave 3: Auth & School Onboarding Wizard** (Login screen with validation, 5-step School Setup Wizard, Stepper component, dynamic assessment formula calculator, live branding preview)
-- [ ] **Wave 4: Admin Dashboard Shell** *(Next Up)*
-- [ ] **Wave 5: Subject Teacher Dashboard**
+- [x] **Wave 4: Admin Dashboard Shell, Overview & Staff Management** (Persistent Dashboard Layout with collapsible Sidebar, TopBar with search/notifications/profile, StatCard, Table, Modal dialogs, Submission Status tracker, filterable Staff Table with repeatable assignments)
+- [ ] **Wave 5: Subject Teacher Dashboard** *(Next Up)*
 - [ ] **Wave 6: Class Teacher Dashboard**
 - [ ] **Wave 7: Parent & Student Views**
 - [ ] **Wave 8: Fees & Payments UI**

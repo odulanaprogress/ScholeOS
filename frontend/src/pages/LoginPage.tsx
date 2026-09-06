@@ -19,11 +19,13 @@ import {
 export interface LoginPageProps {
   onNavigateToOnboarding: () => void
   onNavigateToHome: () => void
+  onLoginSuccess?: () => void
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({
   onNavigateToOnboarding,
   onNavigateToHome,
+  onLoginSuccess,
 }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -64,7 +66,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       setTimeout(() => {
         setLoading(false)
         setLoginSuccess(true)
-      }, 800)
+        if (onLoginSuccess) {
+          setTimeout(() => {
+            onLoginSuccess()
+          }, 600)
+        }
+      }, 700)
     }
   }
 

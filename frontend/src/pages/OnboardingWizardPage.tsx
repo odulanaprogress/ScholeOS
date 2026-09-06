@@ -27,6 +27,7 @@ import {
 export interface OnboardingWizardPageProps {
   onNavigateToHome: () => void
   onNavigateToLogin: () => void
+  onNavigateToDashboard?: () => void
 }
 
 interface ScoreComponent {
@@ -47,6 +48,7 @@ const PRESET_COLORS = [
 export const OnboardingWizardPage: React.FC<OnboardingWizardPageProps> = ({
   onNavigateToHome,
   onNavigateToLogin,
+  onNavigateToDashboard,
 }) => {
   const [currentStep, setCurrentStep] = useState(1)
   const [createdSuccess, setCreatedSuccess] = useState(false)
@@ -250,7 +252,7 @@ export const OnboardingWizardPage: React.FC<OnboardingWizardPageProps> = ({
                   variant="primary"
                   size="lg"
                   rightIcon={<ArrowRight className="w-4 h-4" />}
-                  onClick={onNavigateToHome}
+                  onClick={onNavigateToDashboard || onNavigateToHome}
                   className="w-full sm:w-auto shadow-md"
                 >
                   Go to School Dashboard

@@ -116,3 +116,66 @@ Multi-step flow powered by the `Stepper` component across 5 steps:
 - **[2026-09-06]**: Hot Module Replacement updated dev server at `http://127.0.0.1:5173/`.
 - **[2026-09-06]**: **Wave 3 is complete and verified! Ready for Wave 4 (Admin Dashboard Shell).**
 - **[2026-09-06]**: Git repository initialized, `.gitignore` configured to exclude `node_modules` & `dist`, branch configured to `main`, remote origin linked to `https://github.com/odulanaprogress/ScholeOS.git`, and successfully pushed to GitHub.
+
+---
+
+## 5. Wave 4 — Admin Dashboard Shell, Overview & Staff Management
+
+### Part A — Persistent Dashboard Shell (`components/layout/DashboardLayout.tsx`)
+1. **Sidebar (`components/ui/Sidebar/Sidebar.tsx`)**
+   - Fixed left navigation bar, collapsible to icon-only mode with desktop toggle.
+   - Mobile responsive drawer sliding out on smaller screens (`< 768px`) with dimmed backdrop.
+   - School branding banner displaying school logo/initials and active accent color highlight.
+   - Navigation links: Overview, Students, Staff, Classes & Subjects, Results & Broadsheets, Fees, Attendance, Announcements, AI Assistant, Settings.
+   - "Trial: 12 days left" pill badge near bottom for plan status.
+2. **TopBar (`components/ui/TopBar/TopBar.tsx`)**
+   - Fixed top header spanning the width next to the sidebar.
+   - Mobile hamburger menu trigger.
+   - Global search input for instant discovery.
+   - Notification bell with unread badge and popover showing real-time event log and "Mark all read".
+   - Admin profile avatar + name ("Alhaji Dr. S. Bello", "Principal / Administrator") with interactive dropdown (Profile, Settings, Log Out).
+3. **Mobile Bottom Navigation Bar**
+   - Direct thumb-accessible quick links on mobile devices: Overview, Staff, Results, Fees, and "More" drawer trigger.
+
+### Part B — Overview Page (`pages/admin/OverviewPage.tsx`)
+- **Row of StatCards (`components/ui/StatCard/StatCard.tsx`)**:
+  - Total Students: 1,280 (+14 this term enrolled)
+  - Fee Arrears: ₦3,420,000 (warning tone, 42 students outstanding, opens breakdown modal)
+  - Classes Fully Submitted: 6 / 10 (dynamic ratio tone, 60% with progress bar)
+  - Active Staff: 48 (46 on duty today, links to staff roster)
+- **Class Score Submission Status Card**:
+  - Roster of 8 secondary classes with teacher in charge, progress bar, and status badges (`Complete`, `In Progress`, `Not Started`).
+- **Quick Actions Card**:
+  - Direct shortcuts to Add Staff, View Arrears Breakdown modal, and Send Announcement broadcast modal.
+- **Recent School Activity Card**:
+  - Chronological audit stream of teacher score submissions, fee payments, and attendance marks.
+
+### Part C — Staff Management Page (`pages/admin/StaffManagementPage.tsx`)
+- **Table (`components/ui/Table/Table.tsx`)**:
+  - High-density data table displaying Staff Member (initials avatar, name, email), Role badge (`Class Teacher` in gold, `Subject Teacher` in primary indigo), Assigned Classes and Subjects, Status badge (`Active` green, `Suspended` gray), and action controls.
+- **Search & Filter Controls**:
+  - Keyword search by name, email, subject, or class.
+  - Role dropdown filter (All, Class Teacher, Subject Teacher).
+  - Status dropdown filter (All, Active, Suspended).
+- **Add Staff Modal (`components/ui/Modal/Modal.tsx`)**:
+  - Accessible dialog with Full Name, Email, Role selector.
+  - Form master single class ownership selector for Class Teachers.
+  - Repeatable subject & class assignment rows with "+ Add another assignment" and remove buttons.
+  - "Send Invite" action dynamically adds new educator to the state table with feedback toast.
+- **Deactivate Confirmation Modal**:
+  - Destructive confirmation flow: *"Deactivate [Name]? They will lose access immediately. Their past submitted records will be kept."*
+  - Reversibly switches teacher status to `Suspended` with option to reactivate.
+
+---
+
+## 6. Verification Log
+
+- **[2026-09-06]**: Built `Sidebar`, `TopBar`, `Table`, `Modal`, and `StatCard` reusable UI primitives in `components/ui/`.
+- **[2026-09-06]**: Built persistent `DashboardLayout` shell supporting responsive desktop collapse and mobile drawer + bottom nav.
+- **[2026-09-06]**: Built `OverviewPage.tsx` with StatCards, submission status progress, quick actions, and recent activity feed.
+- **[2026-09-06]**: Built `StaffManagementPage.tsx` with filterable staff table, Add Staff modal with repeatable assignments, and Deactivate confirmation modal.
+- **[2026-09-06]**: Updated `App.tsx` with wave switcher and connected login/onboarding transitions into the admin dashboard.
+- **[2026-09-06]**: Executed `npm run build` (`tsc -b && vite build`) — passed with **0 errors** in `8.72s` (1889 modules transformed).
+- **[2026-09-06]**: Hot Module Replacement verified in running Vite dev server at `http://127.0.0.1:5173/`.
+- **[2026-09-06]**: **Wave 4 is complete and verified! Ready for Wave 5 (Subject Teacher Dashboard - Score Entry).**
+
