@@ -19,7 +19,8 @@ ScholeOS handles results, continuous assessments, broadsheets, fee collection, a
 - [x] **Wave 9: AI Assistant Panels** (ChatWindow component with typing indicator and suggested prompts, Admin AI Copilot with Chat & Report Card Comment generator with one-click insertion, and Student AI Tutor with Subject context switcher and Socratic homework guidance)
 - [x] **Wave 10: CBT (Computer-Based Test) Module** (Timer countdown with amber/red alerts, QuestionNavigator grid, SelectableCard radio options, Subject Teacher question builder with diagram upload & auto-summed points, student full-screen distraction-free examination room, auto-submit on timeout, and question-by-question graded review)
 - [x] **Wave 11: Admin Announcements & Multi-Channel Broadcasts** (Broadcast list page, full-page composer with audience scoping, In-App / SMS / WhatsApp delivery modes, scheduled timing, live card preview, and safety confirmation modal)
-- 🏆 **ScholeOS All Waves 1–11 Complete & Production-Ready!**
+- [x] **Wave 12: Admin Settings & Configuration** (Institutional profile editing, live branding preview with logo upload & preset swatches, repeatable classes and subjects with student deletion safety modal, 100% continuous assessment weight formula builder, and subscription plan tier upgrade modal with billing history)
+- 🏆 **ScholeOS All Waves 1–12 Complete & Production-Ready!**
 
 ---
 

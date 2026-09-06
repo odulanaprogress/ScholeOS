@@ -24,6 +24,7 @@ ScholeOS is constructed in sequential, self-contained **Waves**. Each wave estab
 | **Wave 9** | **AI Assistant Panels** | ChatWindow component, Admin Copilot (chat & report card comments), Student AI Tutor (subject context & study guidance) | 🟢 **COMPLETED** |
 | **Wave 10** | **CBT (Computer-Based Test) Module** | Timer, QuestionNavigator, SelectableCard primitives; Teacher Test List, Question Builder, Results; Student CBT Portal, Full-screen Exam Room, Graded Script Review | 🟢 **COMPLETED** |
 | **Wave 11** | **Admin Announcements & Broadcasts** | Broadcast list page, full-page composer with audience scoping (Everyone, Parents, Students, Staff, Specific Class), multi-channel dispatches (In-App, SMS, WhatsApp), scheduled delivery, live card preview, and safety confirmation modal | 🟢 **COMPLETED** |
+| **Wave 12** | **Admin Settings & Configuration** | Institutional metadata editing, live branding preview & logo upload, repeatable classes & curriculum subjects with student deletion safety modal, 100% continuous assessment weight builder, and subscription plan upgrade with billing history | 🟢 **COMPLETED** |
 
 ---
 
@@ -584,16 +585,69 @@ Wave 11 builds the admin-side Announcement and Broadcast suite for school admini
 
 ---
 
-## 17. Verification Log
+## 17. Wave 12: Admin Settings & School Configuration
+
+Wave 12 establishes the administrative configuration hub for ScholeOS, allowing school principals and administrators to update institutional metadata, customize visual branding, manage classes & curriculum subjects, enforce continuous assessment scoring formulas, and manage subscription plan tiers.
+
+### Part A — School Info Tab
+- **Institutional Metadata Inputs**:
+  - School Official Name (e.g. "Crown Academy Lagos")
+  - Short Name / Code for SMS & official report card headers (e.g. "CAL")
+  - Physical Campus Address
+  - Approximate Student Enrollment range selector
+  - Official Administrative Contact Email & Phone Number
+- **Save Changes**:
+  - Submits institutional profile and displays a green transient confirmation banner.
+
+### Part B — Branding Tab
+- **Direct Reuse of Onboarding Step 2 Components**:
+  - Logo upload dropzone supporting SVG, PNG, and JPG with drag-and-drop or file selection.
+  - Six curated Nigerian school accent color swatches (Indigo `#4338CA`, Emerald `#059669`, Navy `#1E3A8A`, Maroon `#991B1B`, Warm Gold `#D4A017`, Regal Purple `#6B21A8`).
+  - Custom Hex input with instant validation and dynamic preview.
+  - **Live Header Preview Card**: Mini-dashboard header card rendering the school logo, dynamic crest placeholder, and accent brand color banner in real-time.
+- **Save Branding**:
+  - Updates school identity tokens with success alert feedback.
+
+### Part C — Academic Setup Tab
+Stacked layout featuring two critical academic configuration engines:
+1. **Classes & Curriculum Subjects**:
+   - Repeatable dynamic list builders with row deletion and quick addition inputs.
+   - **Student Deletion Safety Modal**:
+     - Deleting a class with registered students (e.g. `JSS 1 Gold` with 42 students) opens a cautionary warning modal:
+       > *"This class has 42 students. Deleting it won't remove their records, but they'll need to be reassigned to another class."*
+     - Allows canceling or confirming deletion with high-contrast destructive button.
+2. **Continuous Assessment Scoring System**:
+   - Dynamic component + weight formula builder (e.g. First CA: 20%, Mid-Term Test: 20%, Terminal Examination: 60%).
+   - **Strict 100% Total Validation**: Real-time accumulator showing total percentage with color-coded status badge (`Total: 100% (Balanced)` vs `Total: X% (Must equal 100%)`). Save action is disabled until sum equals exactly 100%.
+   - **Advisory Policy Warning Note**:
+     > *"Changes here apply to the current and future terms only — already published report cards keep their original scoring."*
+   - Single "Save Academic Configuration" action updating both class structures and assessment weights.
+
+### Part D — My Plan Tab
+- **Active Subscription Card**:
+  - Plan name (e.g. "Crown Professional"), billing cycle ("Billed Annually"), active status badge with animated pulse dot, and auto-renewal date.
+- **Student Capacity StatCard**:
+  - Enrolled tally (e.g. `340 / 500 Enrolled`, 68% utilized) with visual progress bar and remaining seat counter.
+- **Upgrade Plan Modal**:
+  - Selectable tier cards (`SelectableCard`) comparing Basic (₦35,000/term, up to 200 students), Premium (₦65,000/term, up to 600 students), and Enterprise Unlimited (₦120,000/term, unlimited students + priority support).
+  - Modal confirmation workflow with immediate plan tier switching.
+- **Billing History Table**:
+  - Invoice Reference ID, Billing Period, Amount Paid (₦), Status (`Paid` / `Processing`), and Download Receipt action.
+
+---
+
+## 18. Verification Log
 
 - **[2026-09-06]**: Built reusable `Timer`, `QuestionNavigator`, and `SelectableCard` UI primitives (Wave 10).
 - **[2026-09-06]**: Created Subject Teacher CBT question builder and student distraction-free examination room (Wave 10).
 - **[2026-09-06]**: Created Admin Announcements data models, recipient estimator, and mock records in `frontend/src/pages/admin/announcements/announcementsData.ts` (Wave 11).
 - **[2026-09-06]**: Built `AdminAnnouncementsListPage.tsx` with StatCards, multi-channel badges, status filters, and notice inspection modal (Wave 11).
 - **[2026-09-06]**: Built `AdminAnnouncementsComposerPage.tsx` with audience scoping, class multi-select, SMS/WhatsApp toggles, scheduling, live preview card, and confirmation modal (Wave 11).
-- **[2026-09-06]**: Wired `admin-announcements` and `admin-announcements-compose` routes in `frontend/src/App.tsx`, updated admin sidebar, and added Reviewer Dock shortcut (`Broadcasts`).
-- **[2026-09-06]**: Executed production build: `npm run build` (`tsc -b && vite build`) — **0 errors**, built cleanly in **13.16s** (1,949 modules transformed).
+- **[2026-09-06]**: Created Admin Settings data models, mock data, and types in `frontend/src/pages/admin/settings/settingsData.ts` (Wave 12).
+- **[2026-09-06]**: Built complete 4-tab `AdminSettingsPage.tsx` with School Info, Branding preview, Academic Setup with deletion safety modal & 100% formula validation, and My Plan upgrade modal with billing history (Wave 12).
+- **[2026-09-06]**: Wired `admin-settings` route in `frontend/src/App.tsx`, sidebar navigation handler, and Reviewer Dock shortcut button (Wave 12).
+- **[2026-09-06]**: Executed production build: `npm run build` (`tsc -b && vite build`) — **0 errors**, built cleanly in **12.78s** (1,952 modules transformed).
 - **[2026-09-06]**: Verified live dev server at `http://127.0.0.1:5173/` returning `HTTP/1.1 200 OK`.
-- **[2026-09-06]**: **Wave 11 (Admin Announcements) is complete, robust, verified, and production-ready!**
+- **[2026-09-06]**: **Wave 12 (Admin Settings & School Configuration) is complete, robust, verified, and production-ready!**
 
 

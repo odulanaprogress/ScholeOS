@@ -11,6 +11,7 @@ import {
   AdminAiPage,
   AdminAnnouncementsListPage,
   AdminAnnouncementsComposerPage,
+  AdminSettingsPage,
   INITIAL_ADMIN_ANNOUNCEMENTS,
   type AdminAnnouncement,
 } from '@/pages/admin'
@@ -83,6 +84,7 @@ import {
   Bot,
   UserCheck,
   Laptop,
+  Settings,
 } from 'lucide-react'
 
 type AppView =
@@ -95,6 +97,7 @@ type AppView =
   | 'admin-ai'
   | 'admin-announcements'
   | 'admin-announcements-compose'
+  | 'admin-settings'
   | 'admin-other'
   | 'teacher-overview'
   | 'teacher-scores'
@@ -389,6 +392,8 @@ function App() {
       setCurrentView('admin-ai')
     } else if (navId === 'announcements') {
       setCurrentView('admin-announcements')
+    } else if (navId === 'settings') {
+      setCurrentView('admin-settings')
     } else {
       setCurrentView('admin-other')
     }
@@ -583,6 +588,23 @@ function App() {
         >
           <Megaphone className="w-3.5 h-3.5 text-amber-300" />
           <span className="hidden sm:inline">Broadcasts</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveAdminNavId('settings')
+            setCurrentView('admin-settings')
+          }}
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView === 'admin-settings'
+              ? 'bg-indigo-brand text-white shadow-sm'
+              : 'hover:bg-white/10 text-gray-300'
+          }`}
+          title="Wave 12: Admin School Settings"
+        >
+          <Settings className="w-3.5 h-3.5 text-slate-300" />
+          <span className="hidden sm:inline">Settings</span>
         </button>
 
         <span className="w-px h-4 bg-white/20 mx-0.5" />
@@ -1041,6 +1063,19 @@ function App() {
             onSave={handleSaveAnnouncement}
             onCancel={() => setCurrentView('admin-announcements')}
           />
+        </DashboardLayout>
+      )}
+
+      {/* VIEW: ADMIN SETTINGS (WAVE 12) */}
+      {currentView === 'admin-settings' && (
+        <DashboardLayout
+          activeNavId="settings"
+          onNavigate={handleAdminNavigate}
+          pageTitle="School Settings & Configuration"
+          pageSubtitle="Manage institutional metadata, brand identity, academic structures, and subscription plans."
+          onLogout={() => setCurrentView('login')}
+        >
+          <AdminSettingsPage />
         </DashboardLayout>
       )}
 
