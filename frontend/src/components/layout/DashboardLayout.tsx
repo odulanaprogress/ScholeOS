@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Sidebar } from '../ui/Sidebar'
+import { Sidebar, type SidebarNavItem } from '../ui/Sidebar'
 import { TopBar } from '../ui/TopBar'
 import { cn } from '@/utils/cn'
 import {
@@ -14,6 +14,11 @@ export interface DashboardLayoutProps {
   children: React.ReactNode
   activeNavId: string
   onNavigate: (navId: string) => void
+  navItems?: SidebarNavItem[]
+  showTrialPill?: boolean
+  roleBadge?: string
+  userName?: string
+  userRole?: string
   pageTitle?: string
   pageSubtitle?: string
   headerAction?: React.ReactNode
@@ -23,6 +28,7 @@ export interface DashboardLayoutProps {
   onLogout?: () => void
   onOpenSettings?: () => void
   onOpenProfile?: () => void
+  mobileNavTabs?: { id: string; label: string; icon: React.ComponentType<{ className?: string }> }[]
   className?: string
 }
 
@@ -30,6 +36,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
   activeNavId,
   onNavigate,
+  navItems,
+  showTrialPill = true,
+  roleBadge = 'ScholeOS Admin',
+  userName,
+  userRole,
   pageTitle,
   pageSubtitle,
   headerAction,
@@ -39,6 +50,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   onLogout,
   onOpenSettings,
   onOpenProfile,
+  mobileNavTabs: customMobileNavTabs,
   className,
 }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
@@ -58,6 +70,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <Sidebar
         activeItem={activeNavId}
         onNavigate={onNavigate}
+        navItems={navItems}
+        showTrialPill={showTrialPill}
+        roleBadge={roleBadge}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         isMobileOpen={isMobileSidebarOpen}
@@ -71,6 +86,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <TopBar
         isSidebarCollapsed={isSidebarCollapsed}
         onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
+        adminName={userName}
+        adminRole={userRole}
         onLogout={onLogout}
         onOpenSettings={onOpenSettings || (() => onNavigate('settings'))}
         onOpenProfile={onOpenProfile}
@@ -115,7 +132,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
       {/* 4. Mobile Quick Bottom Navigation Bar (< md screens) */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-cream-surface/95 backdrop-blur-md border-t border-cream-border px-3 py-1.5 flex items-center justify-around shadow-lg">
-        {mobileNavTabs.map((tab) => {
+        {(customMobileNavTabs || mobileNavTabs).map((tab) => {
           const Icon = tab.icon
           const isActive = activeNavId === tab.id
           return (

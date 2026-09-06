@@ -6,18 +6,29 @@ import { StyleGuidePage } from '@/pages/StyleGuidePage'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { OverviewPage } from '@/pages/admin/OverviewPage'
 import { StaffManagementPage } from '@/pages/admin/StaffManagementPage'
+import {
+  TeacherOverviewPage,
+  type TeacherAssignment,
+} from '@/pages/teacher/TeacherOverviewPage'
+import { ScoreEntryPage } from '@/pages/teacher/ScoreEntryPage'
+import { TeacherAssignmentsPage } from '@/pages/teacher/TeacherAssignmentsPage'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
+import type { SidebarNavItem } from '@/components/ui/Sidebar'
 import {
   Layers,
   LogIn,
   Sparkles,
   Home,
   LayoutDashboard,
-  Users,
   UserPlus,
+  BookOpen,
+  FileSpreadsheet,
+  Megaphone,
+  Plus,
   Construction,
+  GraduationCap,
 } from 'lucide-react'
 
 type AppView =
@@ -27,6 +38,10 @@ type AppView =
   | 'admin-overview'
   | 'admin-staff'
   | 'admin-other'
+  | 'teacher-overview'
+  | 'teacher-scores'
+  | 'teacher-assignments'
+  | 'teacher-announcements'
   | 'styleguide'
 
 const MODULE_TITLES: Record<string, { title: string; subtitle: string; wave: string }> = {
@@ -72,20 +87,80 @@ const MODULE_TITLES: Record<string, { title: string; subtitle: string; wave: str
   },
 }
 
+// Teacher Navigation Items (no trial pill, no admin items)
+const TEACHER_NAV_ITEMS: SidebarNavItem[] = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'scores', label: 'Score Entry', icon: FileSpreadsheet },
+  { id: 'assignments', label: 'Assignments', icon: BookOpen },
+  { id: 'announcements', label: 'Announcements', icon: Megaphone },
+]
+
+const TEACHER_MOBILE_TABS = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'scores', label: 'Scores', icon: FileSpreadsheet },
+  { id: 'assignments', label: 'Tasks', icon: BookOpen },
+]
+
+const INITIAL_TEACHER_ASSIGNMENTS: TeacherAssignment[] = [
+  {
+    id: 'jss2a-math',
+    className: 'JSS 2A',
+    subject: 'Mathematics',
+    studentsCount: 38,
+    status: 'draft',
+    lastUpdated: 'Today at 9:30 AM',
+  },
+  {
+    id: 'jss2b-math',
+    className: 'JSS 2B',
+    subject: 'Mathematics',
+    studentsCount: 40,
+    status: 'submitted',
+    lastUpdated: 'Yesterday at 4:15 PM',
+  },
+  {
+    id: 'sss1-physics',
+    className: 'SSS 1 Science',
+    subject: 'Physics',
+    studentsCount: 36,
+    status: 'locked',
+    lastUpdated: 'Sep 2, 2026',
+  },
+]
+
 function App() {
   const [currentView, setCurrentView] = useState<AppView>('landing')
-  const [activeNavId, setActiveNavId] = useState<string>('overview')
+  const [activeAdminNavId, setActiveAdminNavId] = useState<string>('overview')
+  const [activeTeacherNavId, setActiveTeacherNavId] = useState<string>('overview')
+
+  // Shared state
   const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false)
+  const [isAddAssignmentModalOpen, setIsAddAssignmentModalOpen] = useState(false)
+  const [selectedScoreClassId, setSelectedScoreClassId] = useState('jss2a-math')
 
   // Navigate within admin dashboard
   const handleAdminNavigate = (navId: string) => {
-    setActiveNavId(navId)
+    setActiveAdminNavId(navId)
     if (navId === 'overview') {
       setCurrentView('admin-overview')
     } else if (navId === 'staff') {
       setCurrentView('admin-staff')
     } else {
       setCurrentView('admin-other')
+    }
+  }
+
+  // Navigate within teacher dashboard
+  const handleTeacherNavigate = (navId: string) => {
+    setActiveTeacherNavId(navId)
+    if (navId === 'overview') {
+      setCurrentView('teacher-overview')
+    } else if (navId === 'scores') {
+      setCurrentView('teacher-scores')
+    } else if (navId === 'assignments') {
+      setCurrentView('teacher-assignments')
+    } else if (navId === 'announcements') {
+      setCurrentView('teacher-announcements')
     }
   }
 
@@ -96,7 +171,7 @@ function App() {
         <button
           type="button"
           onClick={() => setCurrentView('landing')}
-          className={`px-2.5 py-1 rounded-full transition-all flex items-center gap-1.5 ${
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
             currentView === 'landing'
               ? 'bg-indigo-brand text-white shadow-sm'
               : 'hover:bg-white/10 text-gray-300'
@@ -110,7 +185,7 @@ function App() {
         <button
           type="button"
           onClick={() => setCurrentView('login')}
-          className={`px-2.5 py-1 rounded-full transition-all flex items-center gap-1.5 ${
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
             currentView === 'login'
               ? 'bg-indigo-brand text-white shadow-sm'
               : 'hover:bg-white/10 text-gray-300'
@@ -124,7 +199,7 @@ function App() {
         <button
           type="button"
           onClick={() => setCurrentView('onboarding')}
-          className={`px-2.5 py-1 rounded-full transition-all flex items-center gap-1.5 ${
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
             currentView === 'onboarding'
               ? 'bg-indigo-brand text-white shadow-sm'
               : 'hover:bg-white/10 text-gray-300'
@@ -135,45 +210,86 @@ function App() {
           <span className="hidden sm:inline">Wizard</span>
         </button>
 
+        <span className="w-px h-4 bg-white/20 mx-0.5" />
+
         {/* Wave 4 Admin Dashboard Links */}
         <button
           type="button"
           onClick={() => {
-            setActiveNavId('overview')
+            setActiveAdminNavId('overview')
             setCurrentView('admin-overview')
           }}
-          className={`px-2.5 py-1 rounded-full transition-all flex items-center gap-1.5 ${
-            currentView === 'admin-overview'
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView.startsWith('admin')
               ? 'bg-indigo-brand text-white shadow-sm'
               : 'hover:bg-white/10 text-gray-300'
           }`}
-          title="Wave 4: Admin Overview"
+          title="Wave 4: Admin Dashboard"
         >
           <LayoutDashboard className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="hidden sm:inline">Overview</span>
+          <span className="hidden sm:inline">Admin</span>
+        </button>
+
+        <span className="w-px h-4 bg-white/20 mx-0.5" />
+
+        {/* Wave 5 Subject Teacher Links */}
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTeacherNavId('overview')
+            setCurrentView('teacher-overview')
+          }}
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView === 'teacher-overview'
+              ? 'bg-indigo-brand text-white shadow-sm'
+              : 'hover:bg-white/10 text-gray-300'
+          }`}
+          title="Wave 5: Teacher Overview"
+        >
+          <GraduationCap className="w-3.5 h-3.5 text-amber-300" />
+          <span className="hidden sm:inline">Teacher</span>
         </button>
 
         <button
           type="button"
           onClick={() => {
-            setActiveNavId('staff')
-            setCurrentView('admin-staff')
+            setActiveTeacherNavId('scores')
+            setCurrentView('teacher-scores')
           }}
-          className={`px-2.5 py-1 rounded-full transition-all flex items-center gap-1.5 ${
-            currentView === 'admin-staff'
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView === 'teacher-scores'
               ? 'bg-indigo-brand text-white shadow-sm'
               : 'hover:bg-white/10 text-gray-300'
           }`}
-          title="Wave 4: Staff Management"
+          title="Wave 5: Score Entry Page"
         >
-          <Users className="w-3.5 h-3.5 text-amber-400" />
-          <span className="hidden sm:inline">Staff</span>
+          <FileSpreadsheet className="w-3.5 h-3.5 text-sky-400" />
+          <span className="hidden sm:inline">Scores</span>
         </button>
 
         <button
           type="button"
+          onClick={() => {
+            setActiveTeacherNavId('assignments')
+            setCurrentView('teacher-assignments')
+          }}
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView === 'teacher-assignments'
+              ? 'bg-indigo-brand text-white shadow-sm'
+              : 'hover:bg-white/10 text-gray-300'
+          }`}
+          title="Wave 5: Assignments Page"
+        >
+          <BookOpen className="w-3.5 h-3.5 text-indigo-300" />
+          <span className="hidden sm:inline">Tasks</span>
+        </button>
+
+        <span className="w-px h-4 bg-white/20 mx-0.5" />
+
+        <button
+          type="button"
           onClick={() => setCurrentView('styleguide')}
-          className={`px-2.5 py-1 rounded-full transition-all flex items-center gap-1.5 ${
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
             currentView === 'styleguide'
               ? 'bg-indigo-brand text-white shadow-sm'
               : 'hover:bg-white/10 text-gray-300'
@@ -200,7 +316,7 @@ function App() {
           onNavigateToOnboarding={() => setCurrentView('onboarding')}
           onNavigateToHome={() => setCurrentView('landing')}
           onLoginSuccess={() => {
-            setActiveNavId('overview')
+            setActiveAdminNavId('overview')
             setCurrentView('admin-overview')
           }}
         />
@@ -212,7 +328,7 @@ function App() {
           onNavigateToHome={() => setCurrentView('landing')}
           onNavigateToLogin={() => setCurrentView('login')}
           onNavigateToDashboard={() => {
-            setActiveNavId('overview')
+            setActiveAdminNavId('overview')
             setCurrentView('admin-overview')
           }}
         />
@@ -230,7 +346,7 @@ function App() {
               variant="primary"
               size="sm"
               onClick={() => {
-                setActiveNavId('staff')
+                setActiveAdminNavId('staff')
                 setCurrentView('admin-staff')
                 setIsAddStaffModalOpen(true)
               }}
@@ -243,7 +359,7 @@ function App() {
         >
           <OverviewPage
             onNavigateToStaff={() => {
-              setActiveNavId('staff')
+              setActiveAdminNavId('staff')
               setCurrentView('admin-staff')
             }}
             onNavigateToFees={() => handleAdminNavigate('fees')}
@@ -281,10 +397,10 @@ function App() {
       {/* VIEW: ADMIN OTHER MODULES PLACEHOLDER */}
       {currentView === 'admin-other' && (
         <DashboardLayout
-          activeNavId={activeNavId}
+          activeNavId={activeAdminNavId}
           onNavigate={handleAdminNavigate}
-          pageTitle={MODULE_TITLES[activeNavId]?.title || 'Module'}
-          pageSubtitle={MODULE_TITLES[activeNavId]?.subtitle || 'ScholeOS Admin Dashboard'}
+          pageTitle={MODULE_TITLES[activeAdminNavId]?.title || 'Module'}
+          pageSubtitle={MODULE_TITLES[activeAdminNavId]?.subtitle || 'ScholeOS Admin Dashboard'}
           onLogout={() => setCurrentView('login')}
         >
           <Card className="p-8 sm:p-12 text-center max-w-2xl mx-auto my-8 space-y-4">
@@ -293,13 +409,13 @@ function App() {
             </div>
             <div className="space-y-1">
               <Badge variant="gold" size="sm" className="mb-2">
-                Scheduled for {MODULE_TITLES[activeNavId]?.wave || 'Upcoming Wave'}
+                Scheduled for {MODULE_TITLES[activeAdminNavId]?.wave || 'Upcoming Wave'}
               </Badge>
               <h2 className="text-xl sm:text-2xl font-display font-bold text-charcoal-dark">
-                {MODULE_TITLES[activeNavId]?.title || 'Upcoming Module'}
+                {MODULE_TITLES[activeAdminNavId]?.title || 'Upcoming Module'}
               </h2>
               <p className="text-xs sm:text-sm text-charcoal-muted max-w-md mx-auto">
-                {MODULE_TITLES[activeNavId]?.subtitle ||
+                {MODULE_TITLES[activeAdminNavId]?.subtitle ||
                   'This module is fully mapped and will be built in the next wave of our iterative roadmap.'}
               </p>
             </div>
@@ -309,7 +425,7 @@ function App() {
                 variant="primary"
                 size="sm"
                 onClick={() => {
-                  setActiveNavId('overview')
+                  setActiveAdminNavId('overview')
                   setCurrentView('admin-overview')
                 }}
               >
@@ -319,12 +435,151 @@ function App() {
                 variant="secondary"
                 size="sm"
                 onClick={() => {
-                  setActiveNavId('staff')
+                  setActiveAdminNavId('staff')
                   setCurrentView('admin-staff')
                 }}
               >
                 Go to Staff Management →
               </Button>
+            </div>
+          </Card>
+        </DashboardLayout>
+      )}
+
+      {/* WAVE 5 — VIEW: SUBJECT TEACHER OVERVIEW */}
+      {currentView === 'teacher-overview' && (
+        <DashboardLayout
+          activeNavId={activeTeacherNavId}
+          onNavigate={handleTeacherNavigate}
+          navItems={TEACHER_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Subject Teacher"
+          userName="Mrs. Bola Adeyemi"
+          userRole="Mathematics & Physics Faculty"
+          mobileNavTabs={TEACHER_MOBILE_TABS}
+          pageTitle="Teacher Dashboard"
+          pageSubtitle="Welcome back, Mrs. Adeyemi • Term 2 Score Submissions & Assignments"
+          headerAction={
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                setSelectedScoreClassId('jss2a-math')
+                setActiveTeacherNavId('scores')
+                setCurrentView('teacher-scores')
+              }}
+            >
+              <FileSpreadsheet className="w-4 h-4 mr-1.5" />
+              Open Score Entry
+            </Button>
+          }
+          onLogout={() => setCurrentView('login')}
+        >
+          <TeacherOverviewPage
+            assignments={INITIAL_TEACHER_ASSIGNMENTS}
+            onNavigateToScoreEntry={(classId) => {
+              setSelectedScoreClassId(classId)
+              setActiveTeacherNavId('scores')
+              setCurrentView('teacher-scores')
+            }}
+          />
+        </DashboardLayout>
+      )}
+
+      {/* WAVE 5 — VIEW: SUBJECT TEACHER SCORE ENTRY */}
+      {currentView === 'teacher-scores' && (
+        <DashboardLayout
+          activeNavId={activeTeacherNavId}
+          onNavigate={handleTeacherNavigate}
+          navItems={TEACHER_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Subject Teacher"
+          userName="Mrs. Bola Adeyemi"
+          userRole="Mathematics & Physics Faculty"
+          mobileNavTabs={TEACHER_MOBILE_TABS}
+          pageTitle="Continuous Assessment & Exam Scores"
+          pageSubtitle="Enter test marks, laboratory scores, and term exam results for your assigned classes."
+          headerAction={
+            <Badge variant="primary" size="sm">
+              Term 2 • 2025/2026
+            </Badge>
+          }
+          onLogout={() => setCurrentView('login')}
+        >
+          <ScoreEntryPage initialAssignmentId={selectedScoreClassId} />
+        </DashboardLayout>
+      )}
+
+      {/* WAVE 5 — VIEW: SUBJECT TEACHER ASSIGNMENTS */}
+      {currentView === 'teacher-assignments' && (
+        <DashboardLayout
+          activeNavId={activeTeacherNavId}
+          onNavigate={handleTeacherNavigate}
+          navItems={TEACHER_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Subject Teacher"
+          userName="Mrs. Bola Adeyemi"
+          userRole="Mathematics & Physics Faculty"
+          mobileNavTabs={TEACHER_MOBILE_TABS}
+          pageTitle="Coursework & Assignments"
+          pageSubtitle="Create assignments, attach worksheets, and track student submissions."
+          headerAction={
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setIsAddAssignmentModalOpen(true)}
+            >
+              <Plus className="w-4 h-4 mr-1.5" />
+              Add Assignment
+            </Button>
+          }
+          onLogout={() => setCurrentView('login')}
+        >
+          <TeacherAssignmentsPage
+            isAddModalOpen={isAddAssignmentModalOpen}
+            onAddModalOpenChange={setIsAddAssignmentModalOpen}
+          />
+        </DashboardLayout>
+      )}
+
+      {/* WAVE 5 — VIEW: SUBJECT TEACHER ANNOUNCEMENTS */}
+      {currentView === 'teacher-announcements' && (
+        <DashboardLayout
+          activeNavId={activeTeacherNavId}
+          onNavigate={handleTeacherNavigate}
+          navItems={TEACHER_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Subject Teacher"
+          userName="Mrs. Bola Adeyemi"
+          userRole="Mathematics & Physics Faculty"
+          mobileNavTabs={TEACHER_MOBILE_TABS}
+          pageTitle="Staff Notices & Announcements"
+          pageSubtitle="Institutional updates from the Principal's Office and Academic Board."
+          onLogout={() => setCurrentView('login')}
+        >
+          <Card className="p-6 space-y-4 max-w-3xl">
+            <div className="p-4 rounded-xl bg-indigo-50/70 border border-indigo-200">
+              <div className="flex items-center justify-between pb-2 mb-2 border-b border-indigo-200/60">
+                <span className="font-bold text-sm text-indigo-950">
+                  Term 2 Score Upload Deadline Reminder
+                </span>
+                <span className="text-[11px] text-indigo-700 font-semibold">2 hours ago</span>
+              </div>
+              <p className="text-xs sm:text-sm text-indigo-900 leading-relaxed">
+                Dear Subject Teachers, please ensure all continuous assessments and exam scores for JSS 1–3 and SSS 1–3 are finalized and submitted for review by Friday, September 11, 2026, ahead of the Form Masters' broadsheet compilation meeting.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-cream-base/50 border border-cream-border">
+              <div className="flex items-center justify-between pb-2 mb-2 border-b border-cream-border">
+                <span className="font-bold text-sm text-charcoal-dark">
+                  Academic Board Meeting — Friday 2:00 PM
+                </span>
+                <span className="text-[11px] text-charcoal-muted font-semibold">Yesterday</span>
+              </div>
+              <p className="text-xs sm:text-sm text-charcoal-muted leading-relaxed">
+                Agenda includes mid-term performance analysis, WAEC prep session scheduling, and parents' consultative forum dates. Attendance is mandatory for all teaching staff.
+              </p>
             </div>
           </Card>
         </DashboardLayout>

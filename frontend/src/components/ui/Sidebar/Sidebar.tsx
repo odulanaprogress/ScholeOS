@@ -40,6 +40,9 @@ export const defaultNavItems: SidebarNavItem[] = [
 export interface SidebarProps {
   activeItem: string
   onNavigate: (id: string) => void
+  navItems?: SidebarNavItem[]
+  showTrialPill?: boolean
+  roleBadge?: string
   isCollapsed?: boolean
   onToggleCollapse?: () => void
   isMobileOpen?: boolean
@@ -54,6 +57,9 @@ export interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({
   activeItem,
   onNavigate,
+  navItems = defaultNavItems,
+  showTrialPill = true,
+  roleBadge = 'ScholeOS Admin',
   isCollapsed = false,
   onToggleCollapse,
   isMobileOpen = false,
@@ -91,7 +97,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </h2>
               <div className="flex items-center gap-1.5 text-[11px] text-charcoal-muted/70 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-                <span>ScholeOS Admin</span>
+                <span>{roleBadge}</span>
               </div>
             </div>
           )}
@@ -129,7 +135,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Navigation Links */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {defaultNavItems.map((item) => {
+        {navItems.map((item) => {
           const Icon = item.icon
           const isActive = activeItem === item.id
 
@@ -193,38 +199,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
         })}
       </nav>
 
-      {/* Trial License Status & Support */}
-      <div className="p-3 border-t border-cream-border shrink-0 bg-cream-base/20">
-        {!isCollapsed ? (
-          <div className="bg-white rounded-xl p-3 border border-cream-border shadow-xs space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-900 border border-amber-200">
-                <Sparkle className="w-3 h-3 text-amber-600 fill-amber-500" />
-                Trial: {trialDaysLeft} days left
-              </span>
-              <span className="text-[10px] text-charcoal-muted/70 font-semibold">Pro Plan</span>
+      {/* Trial License Status & Support (shown only if showTrialPill is true) */}
+      {showTrialPill && (
+        <div className="p-3 border-t border-cream-border shrink-0 bg-cream-base/20">
+          {!isCollapsed ? (
+            <div className="bg-white rounded-xl p-3 border border-cream-border shadow-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-900 border border-amber-200">
+                  <Sparkle className="w-3 h-3 text-amber-600 fill-amber-500" />
+                  Trial: {trialDaysLeft} days left
+                </span>
+                <span className="text-[10px] text-charcoal-muted/70 font-semibold">Pro Plan</span>
+              </div>
+              <p className="text-[11px] text-charcoal-muted leading-tight">
+                Unlock full features & unlimited SMS parent notifications.
+              </p>
+              <button
+                type="button"
+                className="w-full text-center py-1 text-[11px] font-semibold text-indigo-brand hover:text-indigo-hover transition-colors"
+              >
+                Upgrade School Plan →
+              </button>
             </div>
-            <p className="text-[11px] text-charcoal-muted leading-tight">
-              Unlock full features & unlimited SMS parent notifications.
-            </p>
-            <button
-              type="button"
-              className="w-full text-center py-1 text-[11px] font-semibold text-indigo-brand hover:text-indigo-hover transition-colors"
+          ) : (
+            <div
+              className="w-full flex justify-center py-2"
+              title={`Trial: ${trialDaysLeft} days left`}
             >
-              Upgrade School Plan →
-            </button>
-          </div>
-        ) : (
-          <div
-            className="w-full flex justify-center py-2"
-            title={`Trial: ${trialDaysLeft} days left`}
-          >
-            <span className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 border border-amber-300 flex items-center justify-center text-xs font-bold shadow-xs">
-              {trialDaysLeft}d
-            </span>
-          </div>
-        )}
-      </div>
+              <span className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 border border-amber-300 flex items-center justify-center text-xs font-bold shadow-xs">
+                {trialDaysLeft}d
+              </span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 

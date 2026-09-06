@@ -12,8 +12,8 @@ ScholeOS handles results, continuous assessments, broadsheets, fee collection, a
 - [x] **Wave 2: Public Marketing Landing Page** (Hero with retina Dashboard Mockup, Stats bar, Feature cards, ScholeOS Advantage grid, CTA banner, FAQ Accordion, Footer, Demo Booking Modal)
 - [x] **Wave 3: Auth & School Onboarding Wizard** (Login screen with validation, 5-step School Setup Wizard, Stepper component, dynamic assessment formula calculator, live branding preview)
 - [x] **Wave 4: Admin Dashboard Shell, Overview & Staff Management** (Persistent Dashboard Layout with collapsible Sidebar, TopBar with search/notifications/profile, StatCard, Table, Modal dialogs, Submission Status tracker, filterable Staff Table with repeatable assignments)
-- [ ] **Wave 5: Subject Teacher Dashboard** *(Next Up)*
-- [ ] **Wave 6: Class Teacher Dashboard**
+- [x] **Wave 5: Subject Teacher Dashboard & Score Entry** (Role-tailored shell, Tabs component, dynamic assessment scheme columns with max-weight validation, live Total calculator & WAEC grades, sticky student column, coursework & assignments table with upload dropzone)
+- [ ] **Wave 6: Class Teacher Dashboard (Attendance & Broadsheet)** *(Next Up)*
 - [ ] **Wave 7: Parent & Student Views**
 - [ ] **Wave 8: Fees & Payments UI**
 - [ ] **Wave 9: AI Assistant Panels**

@@ -179,3 +179,58 @@ Multi-step flow powered by the `Stepper` component across 5 steps:
 - **[2026-09-06]**: Hot Module Replacement verified in running Vite dev server at `http://127.0.0.1:5173/`.
 - **[2026-09-06]**: **Wave 4 is complete and verified! Ready for Wave 5 (Subject Teacher Dashboard - Score Entry).**
 
+---
+
+## 6. Wave 5 — Subject Teacher Dashboard (Score Entry)
+
+### Part A — Reusable Components & Adaptable Shell
+1. **Tabs (`components/ui/Tabs/Tabs.tsx`)**
+   - Clean horizontal tab bar with underline and pill variants.
+   - Highlights the active class in the school's accent color (`#4338CA`).
+   - Supports status badges (`Draft`, `Submitted`, `Locked`) and smooth mobile horizontal scroll.
+2. **Role-Tailored Dashboard Shell (`components/layout/DashboardLayout.tsx`)**
+   - Nav items: Overview, Score Entry, Assignments, Announcements.
+   - Excludes license trial pill and admin-only settings.
+   - Dynamic user identity: `Mrs. Bola Adeyemi` (`Mathematics & Physics Faculty`).
+   - Mobile quick navigation bar adapted for teacher workflows (Overview, Scores, Tasks, More).
+
+### Part B — Teacher Overview Page (`pages/teacher/TeacherOverviewPage.tsx`)
+- **Metric StatCards:**
+  - My Classes: 3 allocated arms (JSS 2A, JSS 2B, SSS 1 Science).
+  - Pending Submissions: 1 (amber warning tone; action required banner for JSS 2A Mathematics).
+  - Students Taught: 114 total enrolled secondary students.
+- **My Teaching Assignments Table:**
+  - Displays Class, Subject, Student Count, Status badge, and direct "Go to Score Entry" action button linking into the active class tab.
+
+### Part C — Score Entry Page (`pages/teacher/ScoreEntryPage.tsx`)
+- **Top Tabs Bar:** Instant switching between assigned classes with live status chips.
+- **Dynamic Assessment Scheme Columns:**
+  - Renders columns dynamically from school settings: `Exam (60)`, `Welcome Back Test (20)`, `Final CA Test (20)`.
+  - Max values labeled in headers; enforces validation (`0 <= score <= maxWeight`) with instant red border alerts.
+- **Sticky Student Name Column:** Keeps Student Name & ID fixed on the left while horizontal scrolling across score components on mobile screens.
+- **Live Auto-Calculating Total & WAEC Grade:**
+  - Sums test marks and exam marks in real-time.
+  - Generates official WAEC grade previews (A1, B2, C4, D7, E8, F9).
+- **Status Workflows & Modals:**
+  - `Draft` status: editable number inputs, "Save Draft" button, and "Submit for Review" button with confirmation modal warning of locking.
+  - `Submitted` / `Locked` status: read-only text values and "Request to Reopen" button with reason justification dialog for the Principal.
+
+### Part D — Coursework & Assignments Page (`pages/teacher/TeacherAssignmentsPage.tsx`)
+- **Coursework Table:** Title & resource filename, Class, Subject, Due Date, and submission progress bar.
+- **Add Assignment Modal:** Title, Description, Class+Subject select, Due Date, and drag-and-drop file upload dropzone for worksheets and lab guides.
+
+---
+
+## 7. Verification Log
+
+- **[2026-09-06]**: Built reusable `Tabs` component in `components/ui/Tabs/`.
+- **[2026-09-06]**: Enhanced `Sidebar` and `DashboardLayout` with role-based navigation and identity support.
+- **[2026-09-06]**: Built `TeacherOverviewPage.tsx` with StatCards, deadline alert banner, and class assignments table.
+- **[2026-09-06]**: Built `ScoreEntryPage.tsx` with dynamic assessment columns, max-weight validation, live Total calculator, WAEC grade badges, sticky column mobile table, and submit/reopen modals.
+- **[2026-09-06]**: Built `TeacherAssignmentsPage.tsx` with coursework table and Add Assignment modal with file upload dropzone.
+- **[2026-09-06]**: Updated `App.tsx` with Wave 5 routing and floating switcher buttons for Teacher Overview, Scores, and Tasks.
+- **[2026-09-06]**: Executed `npm run build` (`tsc -b && vite build`) — passed with **0 errors** in `11.81s` (1894 modules transformed).
+- **[2026-09-06]**: Hot Module Replacement verified in running Vite dev server at `http://127.0.0.1:5173/`.
+- **[2026-09-06]**: **Wave 5 is complete and verified! Ready for Wave 6 (Class Teacher Dashboard - Attendance & Broadsheet).**
+
+
