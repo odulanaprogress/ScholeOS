@@ -25,6 +25,7 @@ ScholeOS is constructed in sequential, self-contained **Waves**. Each wave estab
 | **Wave 10** | **CBT (Computer-Based Test) Module** | Timer, QuestionNavigator, SelectableCard primitives; Teacher Test List, Question Builder, Results; Student CBT Portal, Full-screen Exam Room, Graded Script Review | 🟢 **COMPLETED** |
 | **Wave 11** | **Admin Announcements & Broadcasts** | Broadcast list page, full-page composer with audience scoping (Everyone, Parents, Students, Staff, Specific Class), multi-channel dispatches (In-App, SMS, WhatsApp), scheduled delivery, live card preview, and safety confirmation modal | 🟢 **COMPLETED** |
 | **Wave 12** | **Admin Settings & Configuration** | Institutional metadata editing, live branding preview & logo upload, repeatable classes & curriculum subjects with student deletion safety modal, 100% continuous assessment weight builder, and subscription plan upgrade with billing history | 🟢 **COMPLETED** |
+| **Wave 13** | **Platform Super Admin Dashboard** | Internal multi-tenant command center across all onboarded schools, cross-platform metrics, Needs Attention expiring trials table, schools directory with manual onboarding & suspension safety modals, and SaaS billing revenue ledger | 🟢 **COMPLETED** |
 
 ---
 
@@ -636,18 +637,68 @@ Stacked layout featuring two critical academic configuration engines:
 
 ---
 
-## 18. Verification Log
+## 18. Wave 13: Platform Super Admin Dashboard
+
+Wave 13 establishes the central multi-tenant management command center for ScholeOS internal leadership, operations, and customer support. Unlike all prior school-tenant scoped modules, this dashboard operates at the platform tier across every registered institution.
+
+### Strict Default Brand Identity
+- **Never Adopts White-Label Colors**: Exclusively renders ScholeOS's native brand tokens: Primary Indigo (`#4338CA`), Warm Gold (`#D4A017`), Charcoal (`#1E1B1A`), and Warm Cream (`#FBF0E1`).
+- **Sidebar Header**: Displays the official ScholeOS HQ monogram with the `Platform Super Admin` role badge and zero trial limitation pills.
+- **Nav Set**: Three clean destinations: **Overview**, **Schools**, and **Billing**.
+
+### Part A — Overview Page (`SuperAdminOverviewPage.tsx`)
+1. **Top Metric StatCards**:
+   - **Total Schools**: Cumulative count of registered institutions with active vs in-trial breakdown.
+   - **Active Trials**: Count of schools evaluating the platform with real-time countdown alerts.
+   - **Total Students Platform-Wide**: Aggregated student biodata records across all institutional databases.
+   - **Monthly Revenue**: Currency formatted MRR with month-over-month percentage growth indicator.
+2. **Subscription Tier Distribution Banner**:
+   - Visual breakdown of active tenant allocations across the Basic, Premium, and Enterprise Unlimited plans.
+3. **"Needs Attention" Table**:
+   - Automated query isolating schools whose 14-day trial concludes in ≤ 3 days or whose accounts are currently in a 7-day Grace Period.
+   - Columns: School Name & Principal Info, Plan Tier badge, Status badge, Urgency tag (e.g. *"Trial ends in 2 days"*, *"4 days left in grace"*), and one-click "View" action routing directly to the school's detail drawer.
+
+### Part B — Schools Directory Page (`SuperAdminSchoolsPage.tsx`)
+1. **Search & Dual-Filter Header**:
+   - Instant search across school names, principals, acronyms, and email addresses.
+   - Status filter dropdown (`All`, `Active`, `Trial`, `Grace Period`, `Suspended`).
+   - Plan filter dropdown (`All`, `Basic`, `Premium`, `Unlimited`).
+2. **Licensed Schools Table**:
+   - Institutional monogram, School Name & short code, Plan badge, Status badge (`Active`, `Trial`, `Grace Period`, `Suspended`), Student Count with quota indicator, and Trial / Renewal Date.
+   - Actions per row: "View Details" modal, "Change Plan" modal, and "Suspend" / "Reactivate" toggle.
+3. **Modal Workflows**:
+   - **Manual School Onboarding Modal**: Facilitates sales-assisted and partner onboarding with School Name, Short Code, Contact Email, Phone, Principal Name, Student Count, and Plan selector.
+   - **School Detail Modal**: Comprehensive institutional sheet showing admin contacts, capacity metrics, and a chronological **Subscription & License Audit Trail** (e.g. *"Upgraded to Premium"*, *"Annual License Renewed"*, *"Trial Started"*).
+   - **Suspend Confirmation Safety Modal**: Cautionary dialog with impact assessment advisory (*"Suspend [School Name]? They will lose access immediately. Their data will be retained."*) and high-contrast destructive confirmation button.
+   - **Reactivation**: Instant one-click restoration to Active standing.
+   - **Change Plan Modal**: Modal reusing `SelectableCard` radio options across Basic (₦35k), Premium (₦65k), and Enterprise Unlimited (₦120k).
+
+### Part C — Platform SaaS Billing Page (`SuperAdminBillingPage.tsx`)
+1. **Top Metric StatCards**:
+   - **Revenue This Month**: Total net SaaS collections from school license fees.
+   - **Overdue Renewals**: Count of schools with unpaid invoices in Grace Period.
+   - **Churned Schools This Month**: Count of suspended or lapsed institutional accounts.
+2. **Platform B2B Billing Ledger**:
+   - Status tabs: `All Transactions`, `Paid`, `Pending`, `Failed`.
+   - Columns: School Name, Amount (₦), Payment Date, Plan Tier, Status badge, and Payment Method (Paystack Card, Flutterwave, Direct Corporate Bank Transfer).
+   - **Receipt Preview Modal**: Digital electronic receipt viewer with PDF download simulation.
+
+---
+
+## 19. Verification Log
 
 - **[2026-09-06]**: Built reusable `Timer`, `QuestionNavigator`, and `SelectableCard` UI primitives (Wave 10).
 - **[2026-09-06]**: Created Subject Teacher CBT question builder and student distraction-free examination room (Wave 10).
 - **[2026-09-06]**: Created Admin Announcements data models, recipient estimator, and mock records in `frontend/src/pages/admin/announcements/announcementsData.ts` (Wave 11).
-- **[2026-09-06]**: Built `AdminAnnouncementsListPage.tsx` with StatCards, multi-channel badges, status filters, and notice inspection modal (Wave 11).
-- **[2026-09-06]**: Built `AdminAnnouncementsComposerPage.tsx` with audience scoping, class multi-select, SMS/WhatsApp toggles, scheduling, live preview card, and confirmation modal (Wave 11).
-- **[2026-09-06]**: Created Admin Settings data models, mock data, and types in `frontend/src/pages/admin/settings/settingsData.ts` (Wave 12).
-- **[2026-09-06]**: Built complete 4-tab `AdminSettingsPage.tsx` with School Info, Branding preview, Academic Setup with deletion safety modal & 100% formula validation, and My Plan upgrade modal with billing history (Wave 12).
-- **[2026-09-06]**: Wired `admin-settings` route in `frontend/src/App.tsx`, sidebar navigation handler, and Reviewer Dock shortcut button (Wave 12).
-- **[2026-09-06]**: Executed production build: `npm run build` (`tsc -b && vite build`) — **0 errors**, built cleanly in **12.78s** (1,952 modules transformed).
+- **[2026-09-06]**: Built `AdminAnnouncementsListPage.tsx` and `AdminAnnouncementsComposerPage.tsx` (Wave 11).
+- **[2026-09-06]**: Built complete 4-tab `AdminSettingsPage.tsx` with School Info, Branding preview, Academic Setup safety modal & 100% formula, and My Plan (Wave 12).
+- **[2026-09-06]**: Created Platform Super Admin data models, mock data, and types in `frontend/src/pages/super-admin/superAdminData.ts` (Wave 13).
+- **[2026-09-06]**: Built `SuperAdminOverviewPage.tsx` with platform StatCards, tier distribution, and "Needs Attention" table (Wave 13).
+- **[2026-09-06]**: Built `SuperAdminSchoolsPage.tsx` with schools directory, manual onboarding modal, details audit trail, suspend confirmation safety modal, and plan upgrade modal (Wave 13).
+- **[2026-09-06]**: Built `SuperAdminBillingPage.tsx` with SaaS revenue StatCards, status filter tabs, platform billing ledger, and receipt viewer (Wave 13).
+- **[2026-09-06]**: Wired `super-admin-overview`, `super-admin-schools`, and `super-admin-billing` routes in `frontend/src/App.tsx`, sidebar navigation handler, and Reviewer Dock shortcut button (`Super Admin`) (Wave 13).
+- **[2026-09-06]**: Executed production build: `npm run build` (`tsc -b && vite build`) — **0 errors**, built cleanly in **12.46s** (1,957 modules transformed).
 - **[2026-09-06]**: Verified live dev server at `http://127.0.0.1:5173/` returning `HTTP/1.1 200 OK`.
-- **[2026-09-06]**: **Wave 12 (Admin Settings & School Configuration) is complete, robust, verified, and production-ready!**
+- **[2026-09-06]**: **Wave 13 (Platform Super Admin Dashboard) is complete, robust, verified, and production-ready!**
 
 

@@ -57,6 +57,16 @@ import {
   type CbtTest,
   type StudentCbtSubmission,
 } from '@/pages/cbt'
+import {
+  SuperAdminOverviewPage,
+  SuperAdminSchoolsPage,
+  SuperAdminBillingPage,
+  INITIAL_LICENSED_SCHOOLS,
+  INITIAL_PLATFORM_BILLING,
+  type LicensedSchool,
+  type PlatformBillingRecord,
+  type SchoolPlan,
+} from '@/pages/super-admin'
 import { AiComingSoonPage } from '@/pages/AiComingSoonPage'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -85,6 +95,8 @@ import {
   UserCheck,
   Laptop,
   Settings,
+  Building2,
+  ShieldCheck,
 } from 'lucide-react'
 
 type AppView =
@@ -99,6 +111,9 @@ type AppView =
   | 'admin-announcements-compose'
   | 'admin-settings'
   | 'admin-other'
+  | 'super-admin-overview'
+  | 'super-admin-schools'
+  | 'super-admin-billing'
   | 'teacher-overview'
   | 'teacher-scores'
   | 'teacher-assignments'
@@ -238,6 +253,19 @@ const STUDENT_MOBILE_TABS = [
   { id: 'assignments', label: 'Tasks', icon: BookOpen },
   { id: 'timetable', label: 'Schedule', icon: CalendarDays },
   { id: 'results', label: 'Results', icon: Award },
+]
+
+// Platform Super Admin Navigation Items (Wave 13)
+const SUPER_ADMIN_NAV_ITEMS: SidebarNavItem[] = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'schools', label: 'Schools', icon: Building2 },
+  { id: 'billing', label: 'Billing', icon: CreditCard },
+]
+
+const SUPER_ADMIN_MOBILE_TABS = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'schools', label: 'Schools', icon: Building2 },
+  { id: 'billing', label: 'Billing', icon: CreditCard },
 ]
 
 const INITIAL_TEACHER_ASSIGNMENTS: TeacherAssignment[] = [
@@ -473,6 +501,115 @@ function App() {
     }
   }
 
+  // Wave 13 — Platform Super Admin State & Handlers
+  const [activeSuperAdminNavId, setActiveSuperAdminNavId] = useState<string>('overview')
+  const [superAdminSchools, setSuperAdminSchools] = useState<LicensedSchool[]>(INITIAL_LICENSED_SCHOOLS)
+  const [superAdminBilling] = useState<PlatformBillingRecord[]>(INITIAL_PLATFORM_BILLING)
+  const [superAdminSelectedSchool, setSuperAdminSelectedSchool] = useState<LicensedSchool | null>(null)
+
+  const handleSuperAdminAddSchool = (
+    newSchoolData: Omit<LicensedSchool, 'id' | 'createdAt' | 'licenseHistory'>
+  ) => {
+    const newSchool: LicensedSchool = {
+      ...newSchoolData,
+      id: `sch-00${superAdminSchools.length + 1}`,
+      createdAt: new Date().toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }),
+      licenseHistory: [
+        {
+          id: `lh-${Date.now()}`,
+          event: `Onboarded to ${newSchoolData.plan.toUpperCase()}`,
+          date: 'Today',
+          note: 'Manual sales-assisted onboarding by platform super admin.',
+        },
+      ],
+    }
+    setSuperAdminSchools((prev) => [newSchool, ...prev])
+  }
+
+  const handleSuperAdminSuspendSchool = (schoolId: string) => {
+    setSuperAdminSchools((prev) =>
+      prev.map((s) => {
+        if (s.id === schoolId) {
+          return {
+            ...s,
+            status: 'suspended',
+            licenseHistory: [
+              {
+                id: `lh-${Date.now()}`,
+                event: 'Access Suspended',
+                date: 'Today',
+                note: 'Account suspended by platform super admin.',
+              },
+              ...s.licenseHistory,
+            ],
+          }
+        }
+        return s
+      })
+    )
+  }
+
+  const handleSuperAdminReactivateSchool = (schoolId: string) => {
+    setSuperAdminSchools((prev) =>
+      prev.map((s) => {
+        if (s.id === schoolId) {
+          return {
+            ...s,
+            status: 'active',
+            licenseHistory: [
+              {
+                id: `lh-${Date.now()}`,
+                event: 'Access Reactivated',
+                date: 'Today',
+                note: 'Reactivated to Active standing by platform super admin.',
+              },
+              ...s.licenseHistory,
+            ],
+          }
+        }
+        return s
+      })
+    )
+  }
+
+  const handleSuperAdminChangePlan = (schoolId: string, newPlan: SchoolPlan) => {
+    setSuperAdminSchools((prev) =>
+      prev.map((s) => {
+        if (s.id === schoolId) {
+          return {
+            ...s,
+            plan: newPlan,
+            licenseHistory: [
+              {
+                id: `lh-${Date.now()}`,
+                event: `Plan Changed to ${newPlan.toUpperCase()}`,
+                date: 'Today',
+                note: 'Subscription plan updated by platform super admin.',
+              },
+              ...s.licenseHistory,
+            ],
+          }
+        }
+        return s
+      })
+    )
+  }
+
+  const handleSuperAdminNavigate = (navId: string) => {
+    setActiveSuperAdminNavId(navId)
+    if (navId === 'overview') {
+      setCurrentView('super-admin-overview')
+    } else if (navId === 'schools') {
+      setCurrentView('super-admin-schools')
+    } else if (navId === 'billing') {
+      setCurrentView('super-admin-billing')
+    }
+  }
+
   return (
     <div className="relative min-h-screen">
       {/* Floating Wave Navigation Switcher for Interactive Review */}
@@ -605,6 +742,23 @@ function App() {
         >
           <Settings className="w-3.5 h-3.5 text-slate-300" />
           <span className="hidden sm:inline">Settings</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveSuperAdminNavId('overview')
+            setCurrentView('super-admin-overview')
+          }}
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView.startsWith('super-admin')
+              ? 'bg-gold-brand text-charcoal-dark font-bold shadow-sm'
+              : 'hover:bg-white/10 text-gold-light'
+          }`}
+          title="Wave 13: Platform Super Admin Dashboard"
+        >
+          <ShieldCheck className="w-3.5 h-3.5 text-gold-brand" />
+          <span className="hidden sm:inline">Super Admin</span>
         </button>
 
         <span className="w-px h-4 bg-white/20 mx-0.5" />
@@ -1076,6 +1230,96 @@ function App() {
           onLogout={() => setCurrentView('login')}
         >
           <AdminSettingsPage />
+        </DashboardLayout>
+      )}
+
+      {/* VIEW: SUPER ADMIN OVERVIEW (WAVE 13) */}
+      {currentView === 'super-admin-overview' && (
+        <DashboardLayout
+          activeNavId={activeSuperAdminNavId}
+          onNavigate={handleSuperAdminNavigate}
+          navItems={SUPER_ADMIN_NAV_ITEMS}
+          mobileNavTabs={SUPER_ADMIN_MOBILE_TABS}
+          showTrialPill={false}
+          roleBadge="Platform Super Admin"
+          userName="Tunde Adeyemi"
+          userRole="Platform Super Admin"
+          schoolName="ScholeOS HQ"
+          accentColor="#4338CA"
+          pageTitle="Platform Overview"
+          pageSubtitle="Global operational intelligence across all licensed schools, continuous tenant health, and SaaS recurring revenue."
+          onLogout={() => setCurrentView('landing')}
+        >
+          <SuperAdminOverviewPage
+            schools={superAdminSchools}
+            billingRecords={superAdminBilling}
+            onViewSchool={(school) => {
+              setSuperAdminSelectedSchool(school)
+              setActiveSuperAdminNavId('schools')
+              setCurrentView('super-admin-schools')
+            }}
+            onNavigateToSchools={() => {
+              setActiveSuperAdminNavId('schools')
+              setCurrentView('super-admin-schools')
+            }}
+            onNavigateToBilling={() => {
+              setActiveSuperAdminNavId('billing')
+              setCurrentView('super-admin-billing')
+            }}
+          />
+        </DashboardLayout>
+      )}
+
+      {/* VIEW: SUPER ADMIN SCHOOLS DIRECTORY (WAVE 13) */}
+      {currentView === 'super-admin-schools' && (
+        <DashboardLayout
+          activeNavId={activeSuperAdminNavId}
+          onNavigate={handleSuperAdminNavigate}
+          navItems={SUPER_ADMIN_NAV_ITEMS}
+          mobileNavTabs={SUPER_ADMIN_MOBILE_TABS}
+          showTrialPill={false}
+          roleBadge="Platform Super Admin"
+          userName="Tunde Adeyemi"
+          userRole="Platform Super Admin"
+          schoolName="ScholeOS HQ"
+          accentColor="#4338CA"
+          pageTitle="School Directory & Licensing"
+          pageSubtitle="Monitor subscriptions, student quotas, and tenant statuses across all onboarded institutions."
+          onLogout={() => setCurrentView('landing')}
+        >
+          <SuperAdminSchoolsPage
+            schools={superAdminSchools}
+            onAddSchool={handleSuperAdminAddSchool}
+            onSuspendSchool={handleSuperAdminSuspendSchool}
+            onReactivateSchool={handleSuperAdminReactivateSchool}
+            onChangePlan={handleSuperAdminChangePlan}
+            selectedSchoolForDetail={superAdminSelectedSchool}
+            onCloseDetailModal={() => setSuperAdminSelectedSchool(null)}
+          />
+        </DashboardLayout>
+      )}
+
+      {/* VIEW: SUPER ADMIN BILLING (WAVE 13) */}
+      {currentView === 'super-admin-billing' && (
+        <DashboardLayout
+          activeNavId={activeSuperAdminNavId}
+          onNavigate={handleSuperAdminNavigate}
+          navItems={SUPER_ADMIN_NAV_ITEMS}
+          mobileNavTabs={SUPER_ADMIN_MOBILE_TABS}
+          showTrialPill={false}
+          roleBadge="Platform Super Admin"
+          userName="Tunde Adeyemi"
+          userRole="Platform Super Admin"
+          schoolName="ScholeOS HQ"
+          accentColor="#4338CA"
+          pageTitle="Platform SaaS Billing"
+          pageSubtitle="Track institutional license subscriptions, direct B2B payments, and overdue renewals."
+          onLogout={() => setCurrentView('landing')}
+        >
+          <SuperAdminBillingPage
+            billingRecords={superAdminBilling}
+            schools={superAdminSchools}
+          />
         </DashboardLayout>
       )}
 
