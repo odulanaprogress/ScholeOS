@@ -1,7 +1,7 @@
 # ScholeOS — Engineering Handbook & Developer Notes
 
 > **Platform:** ScholeOS — Modern Operating System & Management Platform for Schools  
-> **Status:** ✅ Wave 1, Wave 2 & Wave 3 COMPLETE · Ready for Wave 4 (Admin Dashboard Shell)  
+> **Status:** ✅ Wave 1 through Wave 6 COMPLETE · Ready for Wave 7 (Parent & Student Views)  
 > **Last Updated:** September 2026  
 > **Lead Architect:** Senior Frontend Engineer
 
@@ -16,10 +16,10 @@ ScholeOS is constructed in sequential, self-contained **Waves**. Each wave estab
 | **Wave 1** | **Foundation & Design System** | Token architecture, Tailwind config, core UI components (Button, Card, Input, IconBadge, Badge, Navbar, Footer), interactive Style Guide | 🟢 **COMPLETED** |
 | **Wave 2** | **Public Landing Page** | High-converting marketing homepage, hero, features, testimonials, pricing, mobile nav, stats bar, FAQ accordion, demo booking modal | 🟢 **COMPLETED** |
 | **Wave 3** | **Auth & School Onboarding** | Login screen, multi-step school setup wizard, Stepper component, dynamic grading formula builder, logo & branding live preview | 🟢 **COMPLETED** |
-| **Wave 4** | **Admin Dashboard Shell** | Master layout, sidebar, quick stats, school metrics, user directory, announcements | ⚪ Next Up |
-| **Wave 5** | **Subject Teacher Dashboard** | Gradebook, score entry grid, continuous assessment (CA), bulk uploads, audit trails | ⚪ Queued |
-| **Wave 6** | **Class Teacher Dashboard** | Daily attendance tracker, submission monitor, broadsheet generation, term report cards | ⚪ Queued |
-| **Wave 7** | **Parent & Student Views** | Progress tracking, timetable, homework submissions, report card download, notifications | ⚪ Queued |
+| **Wave 4** | **Admin Dashboard Shell** | Master layout, sidebar, quick stats, school metrics, user directory, announcements | 🟢 **COMPLETED** |
+| **Wave 5** | **Subject Teacher Dashboard** | Gradebook, score entry grid, continuous assessment (CA), bulk uploads, audit trails | 🟢 **COMPLETED** |
+| **Wave 6** | **Class Teacher Dashboard** | Daily attendance tracker, submission monitor, broadsheet generation, term report cards | 🟢 **COMPLETED** |
+| **Wave 7** | **Parent & Student Views** | Progress tracking, timetable, homework submissions, report card download, notifications | ⚪ Next Up |
 | **Wave 8** | **Fees & Payments UI** | Invoicing, payment gateway integration (cards/transfers), payment history, receipts | ⚪ Queued |
 | **Wave 9** | **AI Assistant Panels** | Administrative automation copilot, student learning tutor, analytics insights | ⚪ Queued |
 
@@ -221,16 +221,76 @@ Multi-step flow powered by the `Stepper` component across 5 steps:
 
 ---
 
-## 7. Verification Log
+## 8. Wave 6 — Class Teacher Dashboard Architecture & Implementation
+
+Wave 6 equips Form Masters / Class Teachers with complete terminal management over their designated class arm (`JSS 2A`, 38 students):
+
+### New Reusable Design System Primitives (`components/ui/`)
+1. **`DatePicker` (`components/ui/DatePicker/DatePicker.tsx`)**:
+   - Styled native date input matching the exact token height, rounded borders, and focus rings of `Input`.
+   - Includes calendar icon prefix and presets for today's date.
+2. **`Textarea` (`components/ui/Textarea/Textarea.tsx`)**:
+   - Multi-line textarea matching `Input` design tokens, supporting custom row counts, error states, and responsive resizing.
+
+### Part A — Class Teacher Overview (`pages/class-teacher/ClassTeacherOverviewPage.tsx`)
+- **Metric StatCards:**
+  - `My Class`: Class arm identifier (`JSS 2A`).
+  - `Today's Attendance`: Live status badge (`Marked` in emerald or `Not Marked` in amber) with student ratio.
+  - `Subjects Submitted`: Ratio counter (`5 / 8` or `8 / 8`) with dynamic percentage progress.
+  - `Students in Class`: Total enrolled student count (38).
+- **Submission Status Breakdown Card:**
+  - Progress bar showing submitted subject percentage.
+  - List of all 8 curriculum subjects with status badges (`Draft`, `Submitted`, `Locked`) and submission timestamps.
+
+### Part B — Daily Attendance Register (`pages/class-teacher/AttendancePage.tsx`)
+- **Header & Controls:** DatePicker defaulting to current date with calendar shortcut, "Mark All Present" one-click action, and "Save Attendance" button.
+- **Interactive Student Roll:**
+  - Full class roster with Admission Number, Full Name, and 3-option toggle pill group (`Present`, `Absent`, `Late`).
+  - Color-coded active states: Present (Emerald), Late (Amber), Absent (Rose).
+- **Save Confirmation:**
+  - Persists attendance and renders an animated green confirmation banner with timestamp and count breakdown.
+
+### Part C — Subject Score Submission Tracker (`pages/class-teacher/SubmissionTrackerPage.tsx`)
+- **Curriculum Roster Table:**
+  - Tracks all 8 subjects (Mathematics, English Language, Basic Science, Social Studies, Agricultural Science, Business Studies, Civic Education, French Language).
+  - Shows assigned Teacher Name, Status Badge, and Last Updated timestamp.
+- **Teacher Reminder Workflow:**
+  - For `Draft` subjects, renders a "Send Reminder" button.
+  - On click, triggers SMS/portal alert notification, updates button state to "Reminded" with checkmark, and disables repeat dispatch.
+- **Progress Summary Banner:**
+  - Visual completion bar and direct call-to-action to proceed to Broadsheet once submissions are complete.
+
+### Part D — Master Broadsheet & Report Cards (`pages/class-teacher/BroadsheetPage.tsx`)
+- **Submission Guard Banner:**
+  - Incomplete state: Warning banner alert indicating pending subjects and blocking final publication. Includes reviewer shortcut "Simulate All 8 Submitted".
+  - Ready state: Success banner enabling "Publish & Lock Class".
+  - Locked state: Indigo banner confirming permanent terminal lock.
+- **Master Broadsheet Table:**
+  - Sticky Student Name column fixed on the left for seamless mobile horizontal scrolling.
+  - 8 Subject Columns showing total scores out of 100 with color-coded distinction thresholds (scores >= 75 in emerald, < 50 in rose).
+  - Grand Total column (/800), Class Average percentage, and Position ranking with ordinal labels (`1st`, `2nd`, `3rd`, etc.) and highlighted Top 3 badges.
+- **Individual Report Card Modal:**
+  - Biodata and terminal summary banner (Admission No, Position, Grand Total, Term Average).
+  - Full curriculum assessment breakdown table with CA Total (40), Exam Score (60), Total (100), WAEC Grade, and Remarks.
+  - Form Master's Qualitative Comment powered by `Textarea`, quick phrase suggestions, and instant save action.
+- **Publish & Lock Class Confirmation Modal:**
+  - Enforces permanent terminal sealing for the term, generating official parent portal report cards and locking scores.
+
+---
+
+## 9. Verification Log
 
 - **[2026-09-06]**: Built reusable `Tabs` component in `components/ui/Tabs/`.
 - **[2026-09-06]**: Enhanced `Sidebar` and `DashboardLayout` with role-based navigation and identity support.
 - **[2026-09-06]**: Built `TeacherOverviewPage.tsx` with StatCards, deadline alert banner, and class assignments table.
 - **[2026-09-06]**: Built `ScoreEntryPage.tsx` with dynamic assessment columns, max-weight validation, live Total calculator, WAEC grade badges, sticky column mobile table, and submit/reopen modals.
 - **[2026-09-06]**: Built `TeacherAssignmentsPage.tsx` with coursework table and Add Assignment modal with file upload dropzone.
-- **[2026-09-06]**: Updated `App.tsx` with Wave 5 routing and floating switcher buttons for Teacher Overview, Scores, and Tasks.
-- **[2026-09-06]**: Executed `npm run build` (`tsc -b && vite build`) — passed with **0 errors** in `11.81s` (1894 modules transformed).
-- **[2026-09-06]**: Hot Module Replacement verified in running Vite dev server at `http://127.0.0.1:5173/`.
-- **[2026-09-06]**: **Wave 5 is complete and verified! Ready for Wave 6 (Class Teacher Dashboard - Attendance & Broadsheet).**
+- **[2026-09-06]**: Built reusable `DatePicker` and `Textarea` primitives in `components/ui/`.
+- **[2026-09-06]**: Built `ClassTeacherOverviewPage.tsx`, `AttendancePage.tsx`, `SubmissionTrackerPage.tsx`, and `BroadsheetPage.tsx`.
+- **[2026-09-06]**: Connected Class Teacher views into `App.tsx` with role navigation items and interactive quick-switch buttons in the review dock.
+- **[2026-09-06]**: Executed `npm run build` (`tsc -b && vite build`) — passed with **0 errors** in `18.22s` (1903 modules transformed).
+- **[2026-09-06]**: Interactive browser subagent test executed at `http://127.0.0.1:5173/` verifying Overview, Attendance, Tracker, Broadsheet, Report Card modal, and Publish & Lock flows.
+- **[2026-09-06]**: Captured screenshots and recorded browser session (`class_teacher_check_-62135596800000.webp`).
+- **[2026-09-06]**: **Wave 6 is complete and verified! Ready for Wave 7 (Parent & Student Views).**
 
 

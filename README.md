@@ -13,8 +13,8 @@ ScholeOS handles results, continuous assessments, broadsheets, fee collection, a
 - [x] **Wave 3: Auth & School Onboarding Wizard** (Login screen with validation, 5-step School Setup Wizard, Stepper component, dynamic assessment formula calculator, live branding preview)
 - [x] **Wave 4: Admin Dashboard Shell, Overview & Staff Management** (Persistent Dashboard Layout with collapsible Sidebar, TopBar with search/notifications/profile, StatCard, Table, Modal dialogs, Submission Status tracker, filterable Staff Table with repeatable assignments)
 - [x] **Wave 5: Subject Teacher Dashboard & Score Entry** (Role-tailored shell, Tabs component, dynamic assessment scheme columns with max-weight validation, live Total calculator & WAEC grades, sticky student column, coursework & assignments table with upload dropzone)
-- [ ] **Wave 6: Class Teacher Dashboard (Attendance & Broadsheet)** *(Next Up)*
-- [ ] **Wave 7: Parent & Student Views**
+- [x] **Wave 6: Class Teacher Dashboard (Attendance & Broadsheet)** (Daily attendance register with Present/Absent/Late pills, DatePicker, Subject Submission Tracker with reminders, Master Broadsheet table with sticky column, weighted totals, position ranks, individual Report Card modal with Textarea remarks, and permanent terminal Publish & Lock modal)
+- [ ] **Wave 7: Parent & Student Views** *(Next Up)*
 - [ ] **Wave 8: Fees & Payments UI**
 - [ ] **Wave 9: AI Assistant Panels**
 

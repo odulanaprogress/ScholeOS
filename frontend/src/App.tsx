@@ -12,6 +12,12 @@ import {
 } from '@/pages/teacher/TeacherOverviewPage'
 import { ScoreEntryPage } from '@/pages/teacher/ScoreEntryPage'
 import { TeacherAssignmentsPage } from '@/pages/teacher/TeacherAssignmentsPage'
+import {
+  ClassTeacherOverviewPage,
+  AttendancePage,
+  SubmissionTrackerPage,
+  BroadsheetPage,
+} from '@/pages/class-teacher'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -29,6 +35,10 @@ import {
   Plus,
   Construction,
   GraduationCap,
+  CalendarCheck,
+  ClipboardList,
+  Award,
+  Users,
 } from 'lucide-react'
 
 type AppView =
@@ -42,6 +52,12 @@ type AppView =
   | 'teacher-scores'
   | 'teacher-assignments'
   | 'teacher-announcements'
+  | 'class-teacher-overview'
+  | 'class-teacher-scores'
+  | 'class-teacher-attendance'
+  | 'class-teacher-tracker'
+  | 'class-teacher-broadsheet'
+  | 'class-teacher-announcements'
   | 'styleguide'
 
 const MODULE_TITLES: Record<string, { title: string; subtitle: string; wave: string }> = {
@@ -101,6 +117,23 @@ const TEACHER_MOBILE_TABS = [
   { id: 'assignments', label: 'Tasks', icon: BookOpen },
 ]
 
+// Class Teacher Navigation Items (Wave 6)
+const CLASS_TEACHER_NAV_ITEMS: SidebarNavItem[] = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'scores', label: 'Score Entry', icon: FileSpreadsheet },
+  { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
+  { id: 'tracker', label: 'Submission Tracker', icon: ClipboardList },
+  { id: 'broadsheet', label: 'Report Cards & Broadsheet', icon: Award },
+  { id: 'announcements', label: 'Announcements', icon: Megaphone },
+]
+
+const CLASS_TEACHER_MOBILE_TABS = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
+  { id: 'broadsheet', label: 'Broadsheet', icon: Award },
+  { id: 'tracker', label: 'Tracker', icon: ClipboardList },
+]
+
 const INITIAL_TEACHER_ASSIGNMENTS: TeacherAssignment[] = [
   {
     id: 'jss2a-math',
@@ -132,6 +165,7 @@ function App() {
   const [currentView, setCurrentView] = useState<AppView>('landing')
   const [activeAdminNavId, setActiveAdminNavId] = useState<string>('overview')
   const [activeTeacherNavId, setActiveTeacherNavId] = useState<string>('overview')
+  const [activeClassTeacherNavId, setActiveClassTeacherNavId] = useState<string>('overview')
 
   // Shared state
   const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false)
@@ -150,7 +184,7 @@ function App() {
     }
   }
 
-  // Navigate within teacher dashboard
+  // Navigate within subject teacher dashboard
   const handleTeacherNavigate = (navId: string) => {
     setActiveTeacherNavId(navId)
     if (navId === 'overview') {
@@ -161,6 +195,24 @@ function App() {
       setCurrentView('teacher-assignments')
     } else if (navId === 'announcements') {
       setCurrentView('teacher-announcements')
+    }
+  }
+
+  // Navigate within class teacher dashboard (Wave 6)
+  const handleClassTeacherNavigate = (navId: string) => {
+    setActiveClassTeacherNavId(navId)
+    if (navId === 'overview') {
+      setCurrentView('class-teacher-overview')
+    } else if (navId === 'scores') {
+      setCurrentView('class-teacher-scores')
+    } else if (navId === 'attendance') {
+      setCurrentView('class-teacher-attendance')
+    } else if (navId === 'tracker') {
+      setCurrentView('class-teacher-tracker')
+    } else if (navId === 'broadsheet') {
+      setCurrentView('class-teacher-broadsheet')
+    } else if (navId === 'announcements') {
+      setCurrentView('class-teacher-announcements')
     }
   }
 
@@ -285,6 +337,75 @@ function App() {
         </button>
 
         <span className="w-px h-4 bg-white/20 mx-0.5" />
+
+        {/* Wave 6 Class Teacher Links */}
+        <button
+          type="button"
+          onClick={() => {
+            setActiveClassTeacherNavId('overview')
+            setCurrentView('class-teacher-overview')
+          }}
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView === 'class-teacher-overview'
+              ? 'bg-indigo-brand text-white shadow-sm'
+              : 'hover:bg-white/10 text-gray-300'
+          }`}
+          title="Wave 6: Class Teacher Overview"
+        >
+          <Users className="w-3.5 h-3.5 text-rose-300" />
+          <span className="hidden sm:inline">Class</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveClassTeacherNavId('attendance')
+            setCurrentView('class-teacher-attendance')
+          }}
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView === 'class-teacher-attendance'
+              ? 'bg-indigo-brand text-white shadow-sm'
+              : 'hover:bg-white/10 text-gray-300'
+          }`}
+          title="Wave 6: Daily Attendance Page"
+        >
+          <CalendarCheck className="w-3.5 h-3.5 text-emerald-300" />
+          <span className="hidden sm:inline">Attend</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveClassTeacherNavId('tracker')
+            setCurrentView('class-teacher-tracker')
+          }}
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView === 'class-teacher-tracker'
+              ? 'bg-indigo-brand text-white shadow-sm'
+              : 'hover:bg-white/10 text-gray-300'
+          }`}
+          title="Wave 6: Subject Submission Tracker"
+        >
+          <ClipboardList className="w-3.5 h-3.5 text-amber-300" />
+          <span className="hidden sm:inline">Tracker</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveClassTeacherNavId('broadsheet')
+            setCurrentView('class-teacher-broadsheet')
+          }}
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView === 'class-teacher-broadsheet'
+              ? 'bg-indigo-brand text-white shadow-sm'
+              : 'hover:bg-white/10 text-gray-300'
+          }`}
+          title="Wave 6: Master Broadsheet & Report Cards"
+        >
+          <Award className="w-3.5 h-3.5 text-gold-brand" />
+          <span className="hidden sm:inline">Broadsheet</span>
+        </button>
 
         <button
           type="button"
@@ -579,6 +700,197 @@ function App() {
               </div>
               <p className="text-xs sm:text-sm text-charcoal-muted leading-relaxed">
                 Agenda includes mid-term performance analysis, WAEC prep session scheduling, and parents' consultative forum dates. Attendance is mandatory for all teaching staff.
+              </p>
+            </div>
+          </Card>
+        </DashboardLayout>
+      )}
+
+      {/* WAVE 6 — VIEW: CLASS TEACHER OVERVIEW */}
+      {currentView === 'class-teacher-overview' && (
+        <DashboardLayout
+          activeNavId={activeClassTeacherNavId}
+          onNavigate={handleClassTeacherNavigate}
+          navItems={CLASS_TEACHER_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Class Teacher • JSS 2A"
+          userName="Mrs. Bola Adeyemi"
+          userRole="Form Master & Mathematics"
+          mobileNavTabs={CLASS_TEACHER_MOBILE_TABS}
+          pageTitle="Class Teacher Dashboard"
+          pageSubtitle="Class JSS 2A (38 Students) • Term 2 2025/2026 Academic Session"
+          headerAction={
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => handleClassTeacherNavigate('broadsheet')}
+            >
+              <Award className="w-4 h-4 mr-1.5" />
+              View Broadsheet
+            </Button>
+          }
+          onLogout={() => setCurrentView('login')}
+        >
+          <ClassTeacherOverviewPage
+            className="JSS 2A"
+            totalStudents={38}
+            attendanceStatus="marked"
+            presentCount={36}
+            onNavigateToAttendance={() => handleClassTeacherNavigate('attendance')}
+            onNavigateToTracker={() => handleClassTeacherNavigate('tracker')}
+            onNavigateToBroadsheet={() => handleClassTeacherNavigate('broadsheet')}
+            onNavigateToScores={() => handleClassTeacherNavigate('scores')}
+          />
+        </DashboardLayout>
+      )}
+
+      {/* WAVE 6 — VIEW: CLASS TEACHER SCORE ENTRY (reusing Wave 5 ScoreEntryPage) */}
+      {currentView === 'class-teacher-scores' && (
+        <DashboardLayout
+          activeNavId={activeClassTeacherNavId}
+          onNavigate={handleClassTeacherNavigate}
+          navItems={CLASS_TEACHER_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Class Teacher • JSS 2A"
+          userName="Mrs. Bola Adeyemi"
+          userRole="Form Master & Mathematics"
+          mobileNavTabs={CLASS_TEACHER_MOBILE_TABS}
+          pageTitle="Mathematics — Continuous Assessment & Exam"
+          pageSubtitle="Your assigned subject for JSS 2A • 1st CA (20), 2nd CA (20), Exam (60)"
+          headerAction={
+            <Badge variant="primary" size="sm">
+              Term 2 • 2025/2026
+            </Badge>
+          }
+          onLogout={() => setCurrentView('login')}
+        >
+          <ScoreEntryPage initialAssignmentId="jss2a-math" />
+        </DashboardLayout>
+      )}
+
+      {/* WAVE 6 — VIEW: CLASS TEACHER ATTENDANCE */}
+      {currentView === 'class-teacher-attendance' && (
+        <DashboardLayout
+          activeNavId={activeClassTeacherNavId}
+          onNavigate={handleClassTeacherNavigate}
+          navItems={CLASS_TEACHER_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Class Teacher • JSS 2A"
+          userName="Mrs. Bola Adeyemi"
+          userRole="Form Master & Mathematics"
+          mobileNavTabs={CLASS_TEACHER_MOBILE_TABS}
+          pageTitle="Daily Attendance Register"
+          pageSubtitle="Morning attendance roll call for JSS 2A • Term 2 2025/2026"
+          headerAction={
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => handleClassTeacherNavigate('overview')}
+            >
+              ← Back to Overview
+            </Button>
+          }
+          onLogout={() => setCurrentView('login')}
+        >
+          <AttendancePage />
+        </DashboardLayout>
+      )}
+
+      {/* WAVE 6 — VIEW: CLASS TEACHER SUBMISSION TRACKER */}
+      {currentView === 'class-teacher-tracker' && (
+        <DashboardLayout
+          activeNavId={activeClassTeacherNavId}
+          onNavigate={handleClassTeacherNavigate}
+          navItems={CLASS_TEACHER_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Class Teacher • JSS 2A"
+          userName="Mrs. Bola Adeyemi"
+          userRole="Form Master & Mathematics"
+          mobileNavTabs={CLASS_TEACHER_MOBILE_TABS}
+          pageTitle="Subject Score Submission Tracker"
+          pageSubtitle="Real-time monitor of subject submissions across all 8 curriculum subjects for JSS 2A"
+          headerAction={
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => handleClassTeacherNavigate('broadsheet')}
+            >
+              <Award className="w-4 h-4 mr-1.5" />
+              Check Broadsheet
+            </Button>
+          }
+          onLogout={() => setCurrentView('login')}
+        >
+          <SubmissionTrackerPage
+            className="JSS 2A"
+            onNavigateToBroadsheet={() => handleClassTeacherNavigate('broadsheet')}
+          />
+        </DashboardLayout>
+      )}
+
+      {/* WAVE 6 — VIEW: CLASS TEACHER BROADSHEET & REPORT CARDS */}
+      {currentView === 'class-teacher-broadsheet' && (
+        <DashboardLayout
+          activeNavId={activeClassTeacherNavId}
+          onNavigate={handleClassTeacherNavigate}
+          navItems={CLASS_TEACHER_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Class Teacher • JSS 2A"
+          userName="Mrs. Bola Adeyemi"
+          userRole="Form Master & Mathematics"
+          mobileNavTabs={CLASS_TEACHER_MOBILE_TABS}
+          pageTitle="Master Broadsheet & Report Cards"
+          pageSubtitle="Official term-end broadsheet for JSS 2A • 8 Subjects • Weighted Averages & Student Positions"
+          headerAction={
+            <Badge variant="primary" size="sm">
+              Term 2 • 2025/2026
+            </Badge>
+          }
+          onLogout={() => setCurrentView('login')}
+        >
+          <BroadsheetPage
+            className="JSS 2A"
+            onNavigateToTracker={() => handleClassTeacherNavigate('tracker')}
+          />
+        </DashboardLayout>
+      )}
+
+      {/* WAVE 6 — VIEW: CLASS TEACHER ANNOUNCEMENTS */}
+      {currentView === 'class-teacher-announcements' && (
+        <DashboardLayout
+          activeNavId={activeClassTeacherNavId}
+          onNavigate={handleClassTeacherNavigate}
+          navItems={CLASS_TEACHER_NAV_ITEMS}
+          showTrialPill={false}
+          roleBadge="Class Teacher • JSS 2A"
+          userName="Mrs. Bola Adeyemi"
+          userRole="Form Master & Mathematics"
+          mobileNavTabs={CLASS_TEACHER_MOBILE_TABS}
+          pageTitle="Class Notices & Broadcasts"
+          pageSubtitle="Communications and announcements for Form Masters & Class Teachers."
+          onLogout={() => setCurrentView('login')}
+        >
+          <Card className="p-6 space-y-4 max-w-3xl">
+            <div className="p-4 rounded-xl bg-indigo-50/70 border border-indigo-200">
+              <div className="flex items-center justify-between pb-2 mb-2 border-b border-indigo-200/60">
+                <span className="font-bold text-sm text-indigo-950">
+                  Broadsheet Submission Deadline for Form Masters
+                </span>
+                <span className="text-[11px] text-indigo-700 font-semibold">1 hour ago</span>
+              </div>
+              <p className="text-xs sm:text-sm text-indigo-900 leading-relaxed">
+                All Form Masters are requested to ensure their class broadsheets are fully locked and approved by Friday. Once locked, report card PDFs will be generated automatically for the end-of-term PTA Open Day.
+              </p>
+            </div>
+            <div className="p-4 rounded-xl bg-cream-base/50 border border-cream-border">
+              <div className="flex items-center justify-between pb-2 mb-2 border-b border-cream-border">
+                <span className="font-bold text-sm text-charcoal-dark">
+                  Class Attendance Audit Notice
+                </span>
+                <span className="text-[11px] text-charcoal-muted font-semibold">3 days ago</span>
+              </div>
+              <p className="text-xs sm:text-sm text-charcoal-muted leading-relaxed">
+                Please verify that any students with more than 5 cumulative absences have corresponding medical or authorized leave notes on file before term closure.
               </p>
             </div>
           </Card>
