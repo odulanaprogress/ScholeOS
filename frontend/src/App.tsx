@@ -6,7 +6,7 @@ import { StyleGuidePage } from '@/pages/StyleGuidePage'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { OverviewPage } from '@/pages/admin/OverviewPage'
 import { StaffManagementPage } from '@/pages/admin/StaffManagementPage'
-import { AdminFeesPage } from '@/pages/admin'
+import { AdminFeesPage, AdminAiPage } from '@/pages/admin'
 import {
   TeacherOverviewPage,
   type TeacherAssignment,
@@ -31,6 +31,7 @@ import {
   StudentOverviewPage,
   StudentAssignmentsPage,
   StudentTimetablePage,
+  StudentAiPage,
 } from '@/pages/student'
 import { AiComingSoonPage } from '@/pages/AiComingSoonPage'
 import { Button } from '@/components/ui/Button'
@@ -67,6 +68,7 @@ type AppView =
   | 'admin-overview'
   | 'admin-staff'
   | 'admin-fees'
+  | 'admin-ai'
   | 'admin-other'
   | 'teacher-overview'
   | 'teacher-scores'
@@ -250,6 +252,8 @@ function App() {
       setCurrentView('admin-staff')
     } else if (navId === 'fees') {
       setCurrentView('admin-fees')
+    } else if (navId === 'ai') {
+      setCurrentView('admin-ai')
     } else {
       setCurrentView('admin-other')
     }
@@ -404,6 +408,23 @@ function App() {
         >
           <CreditCard className="w-3.5 h-3.5 text-amber-300" />
           <span className="hidden sm:inline">Fees</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveAdminNavId('ai')
+            setCurrentView('admin-ai')
+          }}
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView === 'admin-ai'
+              ? 'bg-indigo-brand text-white shadow-sm'
+              : 'hover:bg-white/10 text-gray-300'
+          }`}
+          title="Wave 9: Admin AI Copilot"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-gold-brand" />
+          <span className="hidden sm:inline">AI Copilot</span>
         </button>
 
         <span className="w-px h-4 bg-white/20 mx-0.5" />
@@ -622,6 +643,23 @@ function App() {
           <span className="hidden sm:inline">Schedule</span>
         </button>
 
+        <button
+          type="button"
+          onClick={() => {
+            setActiveStudentNavId('ai-tutor')
+            setCurrentView('student-ai')
+          }}
+          className={`px-2 py-1 rounded-full transition-all flex items-center gap-1 ${
+            currentView === 'student-ai'
+              ? 'bg-indigo-brand text-white shadow-sm'
+              : 'hover:bg-white/10 text-gray-300'
+          }`}
+          title="Wave 9: Student AI Tutor"
+        >
+          <Bot className="w-3.5 h-3.5 text-emerald-300" />
+          <span className="hidden sm:inline">AI Tutor</span>
+        </button>
+
         <span className="w-px h-4 bg-white/20 mx-0.5" />
 
         <button
@@ -742,6 +780,19 @@ function App() {
           onLogout={() => setCurrentView('login')}
         >
           <AdminFeesPage />
+        </DashboardLayout>
+      )}
+
+      {/* VIEW: ADMIN AI ASSISTANT (WAVE 9) */}
+      {currentView === 'admin-ai' && (
+        <DashboardLayout
+          activeNavId="ai"
+          onNavigate={handleAdminNavigate}
+          pageTitle="ScholeOS AI Assistant & Copilot"
+          pageSubtitle="Natural language school operations intelligence, fee inquiries, and automated report card comments."
+          onLogout={() => setCurrentView('login')}
+        >
+          <AdminAiPage />
         </DashboardLayout>
       )}
 
@@ -1471,7 +1522,7 @@ function App() {
         </DashboardLayout>
       )}
 
-      {/* STUDENT AI TUTOR PLACEHOLDER */}
+      {/* STUDENT AI TUTOR (WAVE 9) */}
       {currentView === 'student-ai' && (
         <DashboardLayout
           activeNavId={activeStudentNavId}
@@ -1483,15 +1534,19 @@ function App() {
           userRole="Student • Class JSS 2A (Adm: JSS2/003)"
           mobileNavTabs={STUDENT_MOBILE_TABS}
           pageTitle="ScholeOS AI Tutor"
-          pageSubtitle="Personalized interactive study assistant scheduled for Wave 9"
+          pageSubtitle="Your 24/7 personal learning guide for homework concepts and revision practice"
+          headerAction={
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => handleStudentNavigate('overview')}
+            >
+              ← Back to Overview
+            </Button>
+          }
           onLogout={() => setCurrentView('login')}
         >
-          <AiComingSoonPage
-            title="ScholeOS AI Tutor"
-            subtitle="Your 24/7 personal learning copilot for solving homework, explaining difficult subjects, and practicing for exams."
-            role="student"
-            onBack={() => handleStudentNavigate('overview')}
-          />
+          <StudentAiPage studentName="Fatima Bello" classNameTitle="JSS 2A" />
         </DashboardLayout>
       )}
 

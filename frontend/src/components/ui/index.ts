@@ -15,3 +15,5 @@ export * from './TopBar'
 export * from './Tabs'
 export * from './DatePicker'
 export * from './Textarea'
+export * from './ChatWindow'
+
