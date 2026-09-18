@@ -25,7 +25,21 @@ ScholeOS is constructed in sequential, self-contained **Waves**. Each wave estab
 | **Wave 10** | **CBT (Computer-Based Test) Module** | Timer, QuestionNavigator, SelectableCard primitives; Teacher Test List, Question Builder, Results; Student CBT Portal, Full-screen Exam Room, Graded Script Review | 🟢 **COMPLETED** |
 | **Wave 11** | **Admin Announcements & Broadcasts** | Broadcast list page, full-page composer with audience scoping (Everyone, Parents, Students, Staff, Specific Class), multi-channel dispatches (In-App, SMS, WhatsApp), scheduled delivery, live card preview, and safety confirmation modal | 🟢 **COMPLETED** |
 | **Wave 12** | **Admin Settings & Configuration** | Institutional metadata editing, live branding preview & logo upload, repeatable classes & curriculum subjects with student deletion safety modal, 100% continuous assessment weight builder, and subscription plan upgrade with billing history | 🟢 **COMPLETED** |
-| **Wave 13** | **Platform Super Admin Dashboard** | Internal multi-tenant command center across all onboarded schools, cross-platform metrics, Needs Attention expiring trials table, schools directory with manual onboarding & suspension safety modals, and SaaS billing revenue ledger | 🟢 **COMPLETED** |
+
+### Backend Wave Tracker
+
+| Backend Wave | Module / Layer | Scope / Key Deliverables | Status |
+| :--- | :--- | :--- | :--- |
+| **Wave 1** | **Database Schema (Postgres) + Clerk Auth** | 16 Drizzle tables, tenant isolation via `school_id`, Clerk Org multi-role auth, migrations & demo seed | 🟢 **COMPLETED** |
+| **Wave 2** | **Firestore Real-Time Layer + Security Rules** | 4 collections, `scholesos` Firebase project, strict zero-client-write rules, `schoolId` claim read gate, App Check enforcement, Firebase Admin & client read helpers | 🟢 **COMPLETED** |
+| **Wave 3** | **`identity-service`** | Clerk webhooks, admin staff provisioning & deactivation, Firebase custom token bridge with `{ schoolId, role }`, `/assignments/me` | 🟢 **COMPLETED** |
+| **Wave 4** | **`academic-service`** | Score submission, continuous assessment computation, report card/broadsheet generation | 🟢 **COMPLETED** |
+| **Wave 5** | **`fees-service`** | Invoices, payment webhooks, bank transfer verification queue | 🟢 **COMPLETED** |
+| **Wave 6** | **`notification-service`** | SMS & WhatsApp dispatch via Cloudflare Queues | 🟢 **COMPLETED** |
+| **Wave 7** | **`document-service`** | PDF report card generation, landscape broadsheets, payment receipts, student ID cards with SVG QR codes, Cloudinary asset storage, immutable document caching | 🟢 **COMPLETED** |
+| **Wave 8** | **`licensing-service`** | Shared zero-network-hop license middleware, fail-safe write blocking, 7-day grace period, daily cron transitions, and Platform Super Admin endpoints | 🟢 **COMPLETED** |
+| **Wave 9** | **`ai-service`** | Admin report card comments & Student Socratic tutor endpoints | ⏳ *Next Wave* |
+| **Wave 10** | **CBT Backend** | Question banks, timed examination sessions, auto-grading | ⚪ *Queued* |
 
 ---
 
@@ -700,5 +714,488 @@ Wave 13 establishes the central multi-tenant management command center for Schol
 - **[2026-09-06]**: Executed production build: `npm run build` (`tsc -b && vite build`) — **0 errors**, built cleanly in **12.46s** (1,957 modules transformed).
 - **[2026-09-06]**: Verified live dev server at `http://127.0.0.1:5173/` returning `HTTP/1.1 200 OK`.
 - **[2026-09-06]**: **Wave 13 (Platform Super Admin Dashboard) is complete, robust, verified, and production-ready!**
+- **[2026-09-18]**: **Wave 2 Backend (Firestore Real-Time Layer + Security Rules)**: Established 4 real-time collections, absolute zero-client-write security rules (`allow write: if false;`), `schoolId` claim read gating, Firebase App Check enforcement specification, backend Firebase Admin SDK integration with PostgreSQL assignment verification guards, and frontend read-only subscription helpers. Both backend (`npm run typecheck`) and frontend (`npm run build`) verified clean with 0 errors!
+
+---
+
+## 20. Wave 2: Firestore Real-Time Layer & Security Rules Architecture
+
+### 20.1 Core Architectural Invariant: Strict Read-Only Client Layer
+In ScholeOS, academic grading authority and attendance ownership are strictly governed by relational constraints stored in PostgreSQL:
+- An academic teacher may only record scores if they possess an active row in PostgreSQL's `assignments` table matching `(school_id, staff_id, class_id, subject_id, term_id)`.
+- Daily class attendance may only be marked by the designated class teacher assigned in PostgreSQL.
+
+**Firestore Security Rules have no direct connectivity to PostgreSQL.**  
+Therefore:
+1. **Zero Client Writes:** Clients (Web, Mobile, Tablets) **NEVER** write directly to Firestore (`allow write: if false;`).
+2. **Worker Gateway with Firebase Admin SDK:** All write requests go through Cloudflare Worker microservices which first query PostgreSQL `assignments`, validate active permissions, and then write via the Firebase Admin SDK (which bypasses security rules).
+3. **Multi-Tenant Read Isolation:** Client reads are gated by the custom JWT claim `request.auth.token.schoolId == schoolId`, synced by `identity-service` in Wave 3.
+4. **App Check Enforcement:** Firebase App Check is enabled on the Cloud Firestore API (`Firestore > Settings > App Check`) to reject unauthorized bots and scrapers before reaching security rules.
+
+### 20.2 Collection Schema Breakdown (Project ID: `scholesos`)
+
+| Collection / Path | Document ID | Key Fields | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/schools/{schoolId}/terms/{termId}/scoreEntries/{entryId}` | `${studentId}_${subjectId}` | `studentId`, `subjectId`, `classId`, `teacherId`, `componentScores` (map), `total`, `status` (`draft` \| `submitted` \| `locked`) | Real-time continuous assessment scores |
+| `/schools/{schoolId}/terms/{termId}/classes/{classId}/submissionStatus` | `submissionStatus` (single doc) | Map of `subjectId` -> `{ status, teacherId, updatedAt }` | Monitored by Class Teacher's live grading tracker |
+| `/schools/{schoolId}/terms/{termId}/reportCards/{studentId}` | `studentId` | `perSubjectTotals` (map), `overallTotal`, `average`, `position`, `comment`, `status` (`draft` \| `published`) | Computed cumulative report cards |
+| `/schools/{schoolId}/classes/{classId}/attendance/{date}` | `YYYY-MM-DD` | `classId`, `date`, `markedByStaffId`, `attendance` (map of `studentId` -> `present` \| `absent` \| `late`) | Daily class attendance register |
+
+### 20.3 Artifacts Created
+- `firestore.rules`: V2 security rules enforcing zero client writes and `schoolId` claim check.
+- `firebase.json` & `.firebaserc`: Firebase CLI configuration targeting default project `scholesos`.
+- `firestore.indexes.json`: Index configuration file.
+- `FIRESTORE_README.md`: Complete architectural guide, App Check setup, and deploy instructions.
+- `backend/src/firestore/`: Strongly typed models (`types.ts`), path builders (`paths.ts`), and Firebase Admin SDK helper (`admin.ts`) with Postgres assignment verification proof.
+- `frontend/src/types/firestore.ts` & `frontend/src/lib/firebase.ts`: Frontend read-only types, configuration, and real-time subscription helpers.
+
+---
+
+## 21. Wave 3: `identity-service` Cloudflare Worker Architecture
+
+### 21.1 Microservice Overview
+`identity-service` operates as a high-performance Cloudflare Worker built with **Hono**. It governs user lifecycle, permission provisioning, Clerk webhook synchronization, and bridges Clerk authentication into Firebase Auth custom tokens for Wave 2's Firestore read rules.
+
+### 21.2 The Dual-Identity Bridge Architecture
+1. **Source of Truth:** Clerk holds user identities, passwords, sessions, and school organization memberships.
+2. **PostgreSQL Authority:** PostgreSQL stores the multi-tenant relation (`school_id`), staff multi-roles (`roles: text[]`), and teaching assignments.
+3. **Firestore Read Rule Enabler:** Firestore security rules gate reads with `request.auth.token.schoolId == schoolId`.
+4. **The Bridge (`POST /firebase-token`):**
+   - Frontend calls `POST /firebase-token` with its Clerk JWT.
+   - Worker validates the token, queries PostgreSQL to find the user's `school_id` and `role`.
+   - Worker calls Firebase Admin SDK `createCustomToken(userId, { schoolId, role })` with minimal claims.
+   - Frontend calls Firebase's `signInWithCustomToken(token)` to establish a parallel Firebase session exclusively for Firestore real-time queries.
+
+### 21.3 Endpoints Reference
+
+| Method & Route | Access Level | Description |
+| :--- | :--- | :--- |
+| `GET /health` | Public | Service health probe returning status, wave number, and timestamp |
+| `POST /clerk-webhook` | Svix Signature Guard | Verifies Clerk Svix headers, idempotency via `webhook_log`, and synchronizes `user.created` (links pending staff `clerk_user_id`), `user.updated`, and `organizationMembership.*` |
+| `POST /staff` | Admin Only (Clerk JWT + Org Role) | Creates Clerk Org invitation, inserts pending staff row (`clerk_user_id = null`), batch-inserts teaching assignments |
+| `PATCH /staff/:id/status` | Admin Only (Clerk JWT + Org Role) | Updates staff status (`active`, `suspended`, `deactivated`). On deactivation: revokes Clerk Org membership, flags active assignments with `needs_reassignment: true`, explicitly keeps past score records for audit |
+| `POST /firebase-token` | Authenticated (Clerk JWT) | Resolves user tenant in PostgreSQL (`staff`, `guardians`, `students`) and mints Firebase custom token with `{ schoolId, role }` |
+| `GET /assignments/me` | Authenticated Staff (Clerk JWT) | Returns the caller's active teaching assignments joined with classes, subjects, and academic terms |
+
+### 21.4 Verification Summary
+- **Typecheck:** `npm run typecheck` (`tsc --noEmit`) passed with **0 errors**.
+- **Automated Verification:** `npm run test:identity` passed **24/24 tests** covering all 5 endpoints, Svix validation, 401 unauthenticated guards, 403 non-admin guards, and custom token minting.
+- **Frontend Build:** `npm run build` passed with **0 errors** (1,957 modules transformed).
+
+---
+
+## 22. Wave 4: `academic-service` Cloudflare Worker Architecture
+
+### 22.1 Microservice Overview
+`academic-service` is the score submission, continuous assessment validation, report card generation, and broadsheet calculation engine for ScholeOS. It operates as a Cloudflare Worker microservice (built with **Hono**) that enforces strict PostgreSQL assignment permissions, writes exclusively to Firestore via the Firebase Admin SDK, and governs the report card publishing lifecycle.
+
+### 22.2 Core Invariants & Architectural Patterns
+1. **Zero Client Writes Enforced:** Clients never write directly to Firestore. All score writes, attendance marks, and report card updates flow through `academic-service` using the Firebase Admin SDK.
+2. **Dynamic Continuous Assessment Validation:** Every score entry is verified server-side against the school's configured assessment components in PostgreSQL (`assessment_components`), validating that individual components do not exceed their configured max weights and that totals equal 100%.
+3. **No Overwriting Submitted/Locked Scores:** Once score entries are in `submitted` or `locked` status, direct writes via `POST /scores` are rejected with **HTTP 400**. Changes require an approved `reopen_requests` row.
+4. **1224 Standard Competition Ranking:** Students with identical overall averages receive equal ranking positions, and subsequent positions skip accordingly (e.g. 1st, 2nd, 2nd, 4th). Ordinals are formatted cleanly (`1st`, `2nd`, `3rd`, `4th`, etc.).
+5. **Draft Report Card Auto-Computation:** When the final subject for a class is submitted, `academic-service` scans all subject scores across the class, aggregates totals, computes class-wide competition ranks, and writes draft `reportCards` docs to Firestore immediately.
+6. **Publish Point of No Return:** `POST /report-card/:classId/:termId/publish` performs an atomic pre-flight audit against the class's `submissionStatus` doc. If any assigned subject is not submitted, publishing is rejected with **HTTP 400** and a detailed list of missing unsubmitted subjects. Once published, status flips to `published` and score entries are set to `locked`.
+
+### 22.3 Database Additions (PostgreSQL / Drizzle)
+- **`reopenRequestStatusEnum`**: Enum with values `'pending'`, `'approved'`, `'rejected'`.
+- **`reopen_requests` Table**:
+  - `id`: UUID primary key
+  - `school_id`, `class_id`, `subject_id`, `term_id`: Scope foreign keys
+  - `staff_id`: Teacher requesting reopening
+  - `reason`: Explanation of why scores require modification
+  - `status`: Pending, approved, or rejected
+  - `reviewed_by_staff_id`: Class teacher or Admin who reviewed the request
+  - `reviewed_at`: Timestamp of review
+  - `created_at`: Timestamp of request submission
+
+### 22.4 Endpoints Reference
+
+| Method & Route | Access Guard | Description |
+| :--- | :--- | :--- |
+| `GET /health` | Public | Service health probe returning status, wave number, and timestamp |
+| `POST /scores/:classId/:subjectId/:termId` | Assigned Subject Teacher / Admin | Validates component scores against weights, calculates total, rejects if submitted/locked, writes draft `scoreEntries` |
+| `POST /scores/:classId/:subjectId/:termId/submit` | Assigned Subject Teacher / Admin | Flips score entries to `submitted`, updates `submissionStatus` doc, and triggers draft report card auto-computation if all class subjects are in |
+| `POST /scores/:classId/:subjectId/:termId/reopen-request` | Assigned Subject Teacher | Creates a pending reopen request in PostgreSQL `reopen_requests` table |
+| `POST /reopen-requests/:id/approve` | Assigned Class Teacher / Admin | Approves request, flips `scoreEntries` and `submissionStatus` back to `draft` for correction |
+| `POST /attendance/:classId/:date` | Assigned Class Teacher / Admin | Records daily attendance register (`present`, `absent`, `late`) in Firestore with `markedByStaffId` |
+| `GET /report-card/:studentId/:termId` | Student / Guardian / Staff / Admin | Retrieves computed report card doc from Firestore (scoped by role & tenant) |
+| `PATCH /report-card/:studentId/comment` | Assigned Class Teacher / Admin | Updates draft report card comments (`teacherComment`, `headTeacherComment`); rejects edits on published cards |
+| `POST /report-card/:classId/:termId/publish` | Assigned Class Teacher / Admin | Point-of-no-return: verifies all subjects are submitted; locks scores and publishes report cards |
+| `GET /broadsheet/:classId/:termId` | Staff / Admin | Assembles live broadsheet matrix: student rows, per-subject totals, overall averages, and competition ranks |
+
+### 22.5 Verification Summary
+- **Typecheck:** `npm run typecheck` (`tsc --noEmit`) in `backend/` passed with **0 errors**.
+- **Automated Verification:** `npm run test:academic` passed **34/34 tests** across all endpoints, 1224 ranking algorithm, CA weight enforcement, reopen flow, and publish gatekeeper.
+- **Identity Regression Check:** `npm run test:identity` passed **24/24 tests**.
+- **Frontend Verification:** `npm run build` passed cleanly with **0 errors** (1,957 modules transformed).
+
+---
+
+## 23. Wave 5: `fees-service` Cloudflare Worker Architecture
+
+### 23.1 Microservice Overview
+`fees-service` manages the school billing lifecycle, fee schedule configuration, automatic term invoice generation, payment gateway webhooks (Paystack & Flutterwave), parent bank transfer proof-of-payment verification queue, and school-wide arrears tracking.
+
+### 23.2 Core Invariants & Architectural Patterns
+1. **Optional Fee-Gated Report Release:** Added `fee_gated_report_release: boolean` (`default: false`) to PostgreSQL `schools` table. Schools can optionally require complete fee settlement before releasing term report cards to parents.
+2. **Webhook Idempotency Protection:** Paystack (HMAC-SHA512) and Flutterwave (`verif-hash`) webhooks check `webhook_log` for the event's unique ID (`data.reference` or `data.tx_ref`). Duplicates return `HTTP 200` immediately with `{ status: "already_processed" }` to handle gateway retries without duplicate payments.
+3. **Parent-Child Relational Guard:** `POST /payments/proof` and `GET /invoices/student/:studentId` check the caller's relationship via `guardian_students` and `students.guardianId`. Submitting proof or viewing invoices for another child is rejected with **HTTP 403 Forbidden**.
+4. **Cloudinary Receipt Handling:** Proof screenshots are uploaded server-side to Cloudinary (`proofs/{invoiceId}_{timestamp}_{random}.jpg`), returning secure image URLs stored on the `payments` table.
+5. **Reversible Payment Rejection:** `POST /payments/:id/reject` stores a rejection reason and explicitly recalculates the invoice's confirmed payments, reverting its status back to `unpaid` or `partially_paid` (never leaving it stuck in `pending_verification` or `paid`). Triggers parent notification via Wave 6.
+
+### 23.3 Endpoints Reference
+
+| Method & Route | Access Guard | Description |
+| :--- | :--- | :--- |
+| `GET /health` | Public | Service health probe returning status, wave number, and timestamp |
+| `POST /fee-structures` | Admin Only | Creates a fee schedule (fee type, amount, term, optional class scope, due date, recurring) |
+| `GET /fee-structures/:schoolId` | Admin Only | Lists configured fee types for the school, filterable by term |
+| `POST /invoices/generate` | Admin Only / Scheduled | Generates term invoices for students matching applicable fee structures (class-scoped) |
+| `GET /invoices/student/:studentId` | Student / Guardian / Admin | Returns student invoices and payment history (enforces parent guardianship check) |
+| `GET /invoices/school/:schoolId` | Admin Only | School-wide invoices filterable by class/status, with inline arrears summary |
+| `POST /payments/webhook/paystack` | HMAC-SHA512 Guard | Paystack gateway webhook with `webhook_log` idempotency replay protection |
+| `POST /payments/webhook/flutterwave` | Secret Hash Guard | Flutterwave gateway webhook with `webhook_log` idempotency replay protection |
+| `POST /payments/proof` | Guardian (Child's Invoice) | Uploads bank transfer receipt to Cloudinary, sets invoice to `pending_verification` |
+| `POST /payments/:id/approve` | Admin Only | Approves pending payment, updates invoice `amount_paid` and status (`paid`/`partially_paid`) |
+| `POST /payments/:id/reject` | Admin Only | Rejects proof with reason, reverts invoice status, queues parent notification |
+| `GET /arrears/:schoolId` | Admin Only | Dedicated arrears ledger of students with balances, sorted descending by total owed |
+
+---
+
+## 24. Wave 6: `notification-service` Cloudflare Worker Architecture
+
+### 24.1 Microservice Overview
+`notification-service` handles all asynchronous multi-channel communications (SMS & WhatsApp via Termii, and in-app alerts) backed by **Cloudflare Queues** (`notifications-queue`). Internal services (`fees-service`, `academic-service`, and the Wave 11 announcement composer) publish messages without blocking on slow cellular carrier APIs.
+
+### 24.2 Provider Abstraction & Pluggability
+Built behind the `NotificationProvider` interface, allowing seamless swapping of SMS/WhatsApp gateway providers (e.g. from Termii to Africa's Talking) without changing any worker or template code:
+```typescript
+export interface NotificationProvider {
+  name: string;
+  send(params: SendMessageParams): Promise<SendMessageResult>;
+}
+```
+
+### 24.3 Delivery & Cost Logging (`notifications` Table)
+Because SMS/WhatsApp per-message carrier fees accumulate at scale, every delivery is recorded in PostgreSQL:
+- `id`, `school_id`, `channel` (`sms` \| `whatsapp` \| `in_app`), `recipient_type` (`parent` \| `staff` \| `student`), `recipient_id`, `template_key`, `status` (`queued` \| `sent` \| `failed`), `provider_ref`, `error`, `created_at`.
+- The row count over time provides an audit ledger and direct cost estimation proxy.
+
+### 24.4 Templates Supported
+1. **`absence_alert`**: `"Your child [studentName] was marked absent today ([date]) at [schoolName]."`
+2. **`payment_confirmation`**: `"Payment of [amount] received for [studentName]'s [feeType]. Thank you."`
+3. **`payment_rejected`**: `"Your payment proof for [studentName] could not be verified: [reason]. Please contact the school office."`
+4. **`arrears_reminder`**: `"This is a reminder that [amount] is outstanding for [studentName]'s [feeType], due [dueDate]."`
+5. **`submission_reminder`**: `"Reminder: scores for [subjectName] — [className] are still pending submission."`
+6. **`announcement`**: Raw announcement message broadcast across selected channels (`in_app`, `sms`, `whatsapp`).
+
+### 24.5 Endpoints & Handlers
+
+| Route / Handler | Access Guard | Description |
+| :--- | :--- | :--- |
+| `GET /health` | Public | Service health probe returning status, wave number, queue name, and provider |
+| `POST /notify` | Internal Secret (`x-internal-service-secret`) | Service-to-service endpoint that validates message and publishes to `notifications-queue` |
+| `queue(batch, env)` | Cloudflare Queues Runtime | Asynchronous consumer resolving recipient phone numbers, rendering templates, calling provider, and writing delivery logs |
+| `POST /announcements/:id/send` | Admin Composer Caller | Resolves targeted audience (`everyone`, `parents`, `students`, `staff`, `classes`) from PostgreSQL, publishes queue messages across selected channels, and marks announcement as `sent` |
+
+### 24.6 Verification Summary
+- **Fees Service Automated Tests (`npm run test:fees`):** **46/46 passed** (0 failures).
+- **Notification Service Automated Tests (`npm run test:notification`):** **38/38 passed** (0 failures).
+- **Academic Service Regression Tests (`npm run test:academic`):** **34/34 passed** (0 failures).
+- **Identity Service Regression Tests (`npm run test:identity`):** **24/24 passed** (0 failures).
+- **Backend Typecheck (`npm run typecheck`):** **0 errors** (`tsc --noEmit`).
+- **Frontend Production Build (`npm run build`):** **0 errors** (1,957 modules transformed).
+
+---
+
+## 25. Wave 7: `document-service` Cloudflare Worker Architecture
+
+### 25.1 Microservice Overview
+`document-service` renders official, white-labeled institutional documents into publication-quality PDFs and uploads them to **Cloudinary** under `scholesos/documents/...`. It uses **Cloudflare's Browser Rendering API** (Puppeteer on Workers) to render HTML templates directly at the edge, avoiding external PDF rendering server dependencies.
+
+### 25.2 Two-Tier Document Caching Architecture (`generated_documents` Table)
+Because published report cards and cleared payment receipts represent immutable historical records, `document-service` implements an aggressive two-tier caching strategy:
+1. **L1 In-Memory Cache**: Fast sub-millisecond in-process cache that eliminates redundant DB roundtrips and handles offline testing environments seamlessly.
+2. **L2 PostgreSQL `generated_documents` Table**: Persistent store across worker invocations:
+   - `id`: UUID primary key
+   - `school_id`: Foreign key to `schools(id)`
+   - `type`: Enum (`report_card` | `broadsheet` | `receipt` | `id_card` | `id_card_batch`)
+   - `reference_id`: Compound reference key (e.g. `${studentId}_${termId}`, `${paymentId}`, `${classId}_${termId}`)
+   - `cloudinary_url`: Persistent HTTPS asset URL
+   - `generated_at`: ISO timestamp
+
+**Guarantees:**
+- If an immutable document has already been generated, the cached Cloudinary URL is returned immediately with `cached: true` without consuming Browser Rendering CPU.
+- Render failures are never written to the cache.
+
+### 25.3 Full White-Labeling Promise
+Every document dynamically reads the school's branding from PostgreSQL:
+- **`logo_url`**: Rendered in the top crest/header.
+- **`brand_color`**: Applied dynamically to headers, table borders, accent bars, and seals (defaulting to `#4338CA`).
+- **Institutional Metadata**: Official school name, address, contact information, and affiliation.
+
+### 25.4 Pure TypeScript SVG QR Code Generator
+Student ID cards require machine-readable verification QR codes for entrance scanners and campus security. Rather than bringing in heavy native C++ binaries (like node-canvas) which are incompatible with Cloudflare Workers:
+- Built a zero-dependency, pure TypeScript QR matrix generator (`qrcode.ts`).
+- Generates inline vector `<svg>` paths that scale crisply at 300+ DPI print resolutions.
+- Encodes verification URLs: `https://app.scholesos.com/verify/student/${studentId}`.
+
+### 25.5 Supported Document Types & Formats
+1. **Report Card (`report_card`)**:
+   - A4 Portrait format.
+   - School header with crest and custom accent color.
+   - Comprehensive continuous assessment breakdown table (1st CA, 2nd CA, Mid-Term, Project, Exam, Total, Grade, Remark).
+   - Overall aggregates, percentage average, and ordinal position rank (1224 competition ranking).
+   - Form teacher and Principal comments with signature lines.
+2. **Master Broadsheet (`broadsheet`)**:
+   - A4 Landscape format.
+   - Matrix grid showing all students across all subjects for a class term.
+   - Per-subject totals, grand totals, averages, and class rank positions.
+3. **Official Payment Receipt (`receipt`)**:
+   - A4 Landscape or slip format.
+   - School header, receipt number, date, and student/class details.
+   - Itemized fee breakdown, payment channel, transaction reference, and amount in words.
+   - Official "VERIFIED PAYMENT" stamp seal.
+4. **Student ID Cards (`id_card` & `id_card_batch`)**:
+   - Standard CR80 dimensions (85.60 × 53.98 mm, 3.370 × 2.125 in).
+   - Single student card: photo avatar, name, admission number, class, emergency contact, and inline vector QR code.
+   - Class batch printing sheet: 8 ID cards neatly arranged on an A4 page with cutting crop marks for bulk institutional printing.
+
+### 25.6 Service Endpoints
+
+| Route | Method | Access Guard | Description |
+| :--- | :--- | :--- | :--- |
+| `GET /health` | GET | Public | Service health probe returning status, wave number, engine, and storage provider |
+| `POST /documents/report-card/:studentId/:termId` | POST | Authenticated / Role-gated | Generates or fetches cached report card PDF URL |
+| `POST /documents/broadsheet/:classId/:termId` | POST | Staff / Admin | Generates whole-class landscape broadsheet PDF |
+| `POST /documents/receipt/:paymentId` | POST | Parent / Admin | Generates verified payment receipt PDF with amount in words |
+| `POST /documents/id-card/:studentId` | POST | Staff / Admin | Generates single student CR80 ID card with vector QR code |
+| `POST /documents/id-cards/batch/:classId` | POST | Admin | Generates full-class printable A4 sheet of student ID cards |
+
+### 25.7 Wave 7 Verification Summary
+- **Document Service Automated Tests (`npm run test:document`):** **46/46 passed** (0 failures).
+- **Fees Service Automated Tests (`npm run test:fees`):** **46/46 passed** (0 failures).
+- **Notification Service Automated Tests (`npm run test:notification`):** **38/38 passed** (0 failures).
+- **Backend Typecheck (`npm run typecheck`):** **0 errors** (`tsc --noEmit`).
+- **Frontend Production Build (`npm run build`):** **0 errors** (1,957 modules transformed in 13.71s).
+
+---
+
+## 26. Wave 8: `licensing-service` & Shared Zero-Hop Middleware Architecture
+
+### 26.1 Microservice Overview
+`licensing-service` manages the SaaS subscription lifecycle across all schools on ScholeOS. It owns the `school_licenses` table in PostgreSQL, provisions licenses during onboarding, supports Platform Super Admin manual upgrades and suspensions, and runs daily automated lifecycle audits via Cloudflare Cron Triggers.
+
+### 26.2 Zero-Network-Hop Architecture (`licenseMiddleware`)
+Routing every single platform HTTP request through a separate Worker just to verify license status adds 50-150ms of network latency per request across the platform. Instead, `licensing-service` exports a shared, in-process middleware (`licenseMiddleware` and `checkSchoolLicense`) directly imported by every microservice:
+- `identity-service`
+- `academic-service`
+- `fees-service`
+- `document-service`
+- `notification-service`
+
+### 26.3 Two-Tier Caching (`cache.ts`)
+To prevent hammering PostgreSQL on every request:
+1. **L1 In-Process Memory Cache:** Map with 5-minute TTL (300,000 ms) for sub-millisecond lookups.
+2. **L2 Cloudflare Workers KV:** When deployed with `env.LICENSES_KV`, writes entries with 300-second TTL.
+3. **Explicit Cache Invalidation:** `invalidateLicenseCache(schoolId)` immediately purges stale entries when an administrator updates a plan or status.
+
+### 26.4 Status Enforcement Rules
+- **`trial` or `active`**: Full platform access (reads and writes allowed).
+- **`grace_period`**:
+  - **READS Allowed:** `GET`, `HEAD`, `OPTIONS`, and historical document generation (`/report-card`, `/broadsheet`) are permitted through with `X-License-Status: grace_period`. Teachers and administrators never lose access to their students' data or report cards over a late payment.
+  - **WRITES Blocked:** `POST`, `PUT`, `PATCH`, `DELETE` are rejected with `HTTP 402 Payment Required` and detailed renewal instructions.
+- **`suspended`**: Completely blocks all platform operations with `HTTP 403 Forbidden` except for licensing endpoints (`/licenses/*`) and payment webhooks (`/payments/webhook/*`), allowing schools to view their account and pay to reactivate.
+
+### 26.5 Fail-Safe Policy: Fail Toward Denying Writes
+If the license check encounters an unexpected database or infrastructure error:
+- **Write Requests (`POST`, `PUT`, `PATCH`, `DELETE`):** STRICTLY BLOCKED with `HTTP 503 Service Unavailable` (`failSafe: "writes_blocked"`). Never risk unauthorized writes during a database hiccup.
+- **Read Requests (`GET`):** Permitted through as a safe fallback with a warning log so users don't experience a total blackout during transient network blips.
+
+### 26.6 Daily Cron Lifecycle Transitions (`cron.ts`)
+A Cloudflare Cron Trigger runs daily (`scheduled` handler) executing `runDailyLicenseCheck`:
+1. **Trial Expired (`trialEndsAt < now`)**: Automatically moves status to `"grace_period"`, sets `gracePeriodEndsAt = now + 7 days`, invalidates cache, and notifies school admin.
+2. **Grace Period Expired (`gracePeriodEndsAt < now`)**: Automatically moves status to `"suspended"`, invalidates cache, and notifies school admin.
+3. **3-Day Expiration & Renewal Alerts**: Scans licenses expiring within 3 days and dispatches reminder notifications via `notification-service`.
+
+### 26.7 Service Endpoints
+
+| Route | Method | Access Guard | Description |
+| :--- | :--- | :--- | :--- |
+| `GET /health` | GET | Public | Service health probe returning status, wave number, and enforcement mode |
+| `POST /licenses` | POST | Onboarding / Super Admin | Provisions new school license record (defaults to 30-day trial) |
+| `GET /licenses/:schoolId` | GET | School Admin / User | Fetches license details, countdowns, and status flags (for My Plan & trial pill) |
+| `PATCH /licenses/:schoolId` | PATCH | Platform Super Admin Only | Manual plan upgrade, student limit adjustment, suspension, or reactivation |
+| `GET /licenses` | GET | Platform Super Admin Only | Lists all schools' licenses and summary metrics for the Super Admin directory |
+| `POST /licenses/cron/run` | POST | Internal Secret / Admin | On-demand trigger for daily lifecycle transitions and reminders |
+
+### 26.8 Wave 8 Verification Summary
+- **Licensing Service Automated Tests (`npm run test:licensing`):** **66/66 passed** (0 failures).
+- **Document Service Automated Tests (`npm run test:document`):** **46/46 passed** (0 failures).
+- **Notification Service Automated Tests (`npm run test:notification`):** **38/38 passed** (0 failures).
+- **Academic Service Regression Tests (`npm run test:academic`):** **34/34 passed** (0 failures).
+- **Identity Service Regression Tests (`npm run test:identity`):** **24/24 passed** (0 failures).
+- **Backend Typecheck (`npm run typecheck`):** **0 errors** (`tsc --noEmit`).
+- **Frontend Production Build (`npm run build`):** **0 errors** (1,957 modules transformed in 12.78s).
+
+---
+
+## 27. Wave 9 — `ai-service` Architecture & Minor-Safe Socratic Intelligence
+
+The `ai-service` is the 9th microservice in the ScholeOS backend stack, completing the 9-service core backend engine. It provides high-intelligence capabilities across both school administration (Copilot analytics and qualitative report card remarks) and student learning (a child-safe Socratic AI tutor).
+
+### 27.1 Core Architectural Principles & Security Invariants
+1. **Stateless Tool Calling (Zero Standing Database Access):** The AI model never holds an open or standing connection to the PostgreSQL database. It interacts solely via Anthropic Claude tool calling (function calling) against strictly scoped, read-only internal tools.
+2. **Server-Side Tenant Scoping:** The `schoolId` is ALWAYS injected server-side from the authenticated caller session/token headers (`resolveSchoolId(c)`). The model cannot specify, override, or manipulate `schoolId`, preventing prompt-injection-driven cross-tenant data leakage.
+3. **Editable Human-in-the-Loop Outputs:** AI-generated report card remarks and administrative communications are returned as draft suggestions with `editable: true`. Teachers and administrators retain full editorial control prior to locking or publishing.
+
+### 27.2 Four Scoped Internal AI Tools (`tools.ts`)
+The model is equipped with four read-only analytical tools:
+1. `get_arrears_summary(schoolId, filterClass?)`: Computes total outstanding debt, debtor counts, collection rates, and overdue amounts across top debtor classes.
+2. `get_submission_status(schoolId, termId?)`: Checks score entry progress across all classes and subjects for an academic term, reporting completion percentages and specific overdue teachers.
+3. `get_attendance_summary(schoolId, date?)`: Returns enrolled students, present/absent/late counts, overall attendance rates, and flags classes requiring intervention.
+4. `compare_term_averages(schoolId, classId, term1, term2)`: Performs cohort progression analysis comparing broadsheet class averages between two terms, identifying notable subject gains and declines.
+
+### 27.3 Licensing Integration & Plan Feature Gating (`feature-gate.ts`)
+AI capabilities are gated as a **Premium-tier feature** via `licensing-service`'s shared middleware:
+- **Plan-to-Features Mapping:**
+  - `basic`: `[]` — AI is completely disabled. Requests receive `HTTP 403 Forbidden` (`Feature Not Available`) prompting the school to upgrade.
+  - `trial`: `["ai_assistant"]` — Enabled during evaluation period.
+  - `premium`: `["ai_assistant"]` — Full access.
+  - `unlimited`: `["ai_assistant", "unlimited_ai"]` — Full access with unlimited quota.
+
+### 27.4 Cost Tracking, Token Attribution & Quota Limiter
+Alongside SMS dispatch (Wave 6), AI is an external API where unmonitored usage incurs variable costs. ScholeOS enforces strict visibility and safeguards:
+1. **`ai_usage_log` Table:** Persists `schoolId`, `userId`, `endpoint`, `model`, `promptTokens`, `completionTokens`, `totalTokens`, `estimatedCostUsd`, and timestamp for every single LLM call.
+2. **Monthly Token Quota (500,000 Tokens/Month):** Fast in-memory caching combined with rolling 30-day PostgreSQL aggregation protects schools against runaway token spend. Once exhausted, calls are rejected with `HTTP 429 Too Many Requests`.
+
+### 27.5 Child-Safe Socratic Student AI Tutor (`POST /ai/student/tutor/chat`)
+Because the student tutor directly serves minors (K-12 students), it enforces strict safety invariants:
+1. **Academic Scoping Only:** Refuses to discuss non-school, personal, romantic, or inappropriate topics (e.g. dating, relationships, video games, depression). Automatically executes polite, educational redirection back to curriculum subjects.
+2. **Direct Homework Answer Refusal:** If a student asks "What is the answer to question 4?" or "Solve this for me", the model firmly refuses to give the direct answer and instead provides step-by-step Socratic guidance (asking what formulas they know, guiding the first step, and prompting critical reasoning).
+3. **WAEC / BECE Curriculum Alignment:** Explanations and prompts are grounded in standard West African curriculum subjects (Mathematics, English Language, Basic Science, Literature, Civic Education).
+
+### 27.6 Qualitative Report Card Remark Generator (`POST /ai/admin/report-card-comment`)
+Generates rich, encouraging, and pedagogically grounded remarks for student report cards:
+- **Grounded Data:** Incorporates the student's actual term average, attendance rate (e.g. 98.2%), and specific top-performing subjects.
+- **Custom Teacher Prompts:** Supports tonal steering (e.g. emphasizing leadership, discipline, or specific areas of improvement).
+- **Always Editable:** Marked with `editable: true` in the response payload.
+
+### 27.7 Service Endpoints
+
+| Route | Method | Access Guard | Description |
+| :--- | :--- | :--- | :--- |
+| `GET /health` | GET | Public | Health check returning model, 4 registered tools, and safety filters |
+| `POST /admin/chat` (alias `/ai/admin/chat`) | POST | Admin & Staff Only | Multi-turn Copilot with automated internal tool execution |
+| `POST /admin/report-card-comment` | POST | Staff & Admin Only | Qualitative report card remark generator grounded in grades |
+| `POST /student/tutor/chat` (alias `/ai/student/tutor/chat`) | POST | Students & Learners | Socratic, child-safe AI curriculum tutor |
+
+### 27.8 Wave 9 Verification Summary
+- **AI Service Automated Tests (`npm run test:ai`):** **86/86 passed** (0 failures).
+- **Licensing Service Automated Tests (`npm run test:licensing`):** **66/66 passed** (0 failures).
+- **Document Service Automated Tests (`npm run test:document`):** **46/46 passed** (0 failures).
+- **Notification Service Automated Tests (`npm run test:notification`):** **38/38 passed** (0 failures).
+- **Backend Typecheck (`npm run typecheck`):** **0 errors** (`tsc --noEmit`).
+- **Frontend Production Build (`npm run build`):** **0 errors** (1,957 modules transformed in 12.55s).
+
+---
+
+## 28. Wave 10 — CBT Backend (Question Bank, Test Sessions, Auto-Grading & Gradebook Import)
+
+Wave 10 closes out the entire ScholeOS backend build (10 backend waves, 13 frontend waves). Rather than becoming an isolated standalone microservice, the CBT engine slots directly into `academic-service`, treating computer-based test results as an official, reviewable continuous assessment component in the student scoring grid.
+
+### 28.1 Core Architectural Principles & Security Invariants
+1. **Answer Key Protection (Zero Client Leakage):** When a student starts a test via `POST /cbt/tests/:id/start`, the server strictly removes `correct_option_index` from every question prior to serialization. The client never receives the answer key during the active testing window.
+2. **Server-Side Scoring Only:** Client-submitted score numbers are strictly ignored and discarded. All scoring is computed server-side by matching the student's recorded JSONB answers against the true `correct_option_index` in PostgreSQL and summing points.
+3. **Incremental Answer Persistence:** Answers are saved question-by-question via `PATCH /cbt/submissions/:id/answer`, writing directly to the `answers` JSONB map so that student progress survives network dropouts or browser refreshes.
+4. **Duplicate Retake Guard:** Once a student has submitted or timed out, subsequent attempts to start the test are blocked with `HTTP 400 Bad Request` ("Retakes are strictly prohibited"). Re-calling start while in-progress seamlessly resumes the active session.
+5. **Teacher Human-in-the-Loop Gradebook Import:** Completed CBT results are not silently dumped into the official broadsheet. Subject teachers execute a manual "Import CBT Scores" action (`POST /cbt/tests/:id/import-to-gradebook`), scaling raw percentages to the designated component weight (e.g., 20 points) and staging draft entries in the score grid for review before final submission and lock.
+
+### 28.2 PostgreSQL Schema Design (`backend/src/db/schema/cbt.ts`)
+
+```mermaid
+erDiagram
+    cbt_tests ||--o{ cbt_questions : contains
+    cbt_tests ||--o{ cbt_submissions : tracks
+    schools ||--o{ cbt_tests : owns
+    classes ||--o{ cbt_tests : assigned_to
+    subjects ||--o{ cbt_tests : curriculum
+    students ||--o{ cbt_submissions : takes
+
+    cbt_tests {
+        uuid id PK
+        uuid school_id FK
+        uuid class_id FK
+        uuid subject_id FK
+        uuid term_id FK
+        varchar title
+        integer duration_minutes
+        timestamp scheduled_at
+        enum status "draft, scheduled, live, completed"
+        integer total_points
+        uuid created_by_staff_id FK
+    }
+
+    cbt_questions {
+        uuid id PK
+        uuid test_id FK
+        text question_text
+        varchar image_url
+        jsonb options "array of strings"
+        integer correct_option_index "0-3 server-only"
+        integer points "default 1"
+        integer display_order
+    }
+
+    cbt_submissions {
+        uuid id PK
+        uuid test_id FK
+        uuid student_id FK
+        jsonb answers "question_id -> option_index"
+        integer score "server-computed"
+        integer time_taken_seconds
+        enum status "not_started, in_progress, completed, auto_submitted"
+        timestamp started_at
+        timestamp submitted_at
+    }
+```
+
+### 28.3 Dynamic Test Status Lifecycle (`GET /cbt/tests/student`)
+Students discover tests relevant to their class with a dynamically resolved status based on the current timestamp relative to `scheduled_at` and `duration_minutes`:
+- **`completed`**: The student has already submitted or been auto-submitted.
+- **`live_now`**: The test is currently within its scheduled window or the student has an active `in_progress` session.
+- **`not_yet_live`**: The test is scheduled for a future time window.
+- **`missed`**: The test window expired without the student taking the exam.
+
+### 28.4 Ten Microservice Endpoints (`/cbt/*`)
+
+| Route | Method | Access Guard | Description |
+| :--- | :--- | :--- | :--- |
+| `POST /cbt/tests` | POST | Subject Teacher / Admin | Creates a new test with questions in "draft" status and computes `totalPoints` |
+| `PATCH /cbt/tests/:id` | PATCH | Owning Teacher | Modifies test details or replaces questions (strictly blocked once published) |
+| `POST /cbt/tests/:id/publish` | POST | Owning Teacher | Flips status from "draft" to "scheduled", making it discoverable to students |
+| `GET /cbt/tests/student` | GET | Student Role | Lists class-assigned tests with dynamic lifecycle status (`not_yet_live`, `live_now`, etc.) |
+| `POST /cbt/tests/:id/start` | POST | Student Role | Creates `in_progress` session, strips answer key, blocks duplicate retakes, resumes active sessions |
+| `PATCH /cbt/submissions/:id/answer` | PATCH | Student Role | Incremental answer saving (`{ questionId, selectedOptionIndex }`) to JSONB map |
+| `POST /cbt/submissions/:id/submit` | POST | Student / System | Server-side auto-grading against answer key, marks "completed" or "auto_submitted" |
+| `GET /cbt/submissions/:id/results` | GET | Student (Own) / Teacher | Detailed question-by-question comparison: student option vs correct option, points earned |
+| `GET /cbt/tests/:id/results` | GET | Owning Teacher / Admin | Aggregated analytics: average score, highest, lowest, completion rate, student roster |
+| `POST /cbt/tests/:id/import-to-gradebook` | POST | Owning Teacher | Scales CBT percentage to component weight and stages draft scores in gradebook |
+
+### 28.5 Wave 10 Verification Summary
+- **CBT Backend Automated Tests (`npm run test:cbt`):** **96/96 passed** (0 failures).
+- **Academic Service Regression Tests (`npm run test:academic`):** **34/34 passed** (0 failures).
+- **AI Service Regression Tests (`npm run test:ai`):** **86/86 passed** (0 failures).
+- **Licensing Service Regression Tests (`npm run test:licensing`):** **66/66 passed** (0 failures).
+- **Backend Typecheck (`npm run typecheck`):** **0 errors** (`tsc --noEmit`).
+- **Frontend Production Build (`npm run build`):** **0 errors** (1,957 modules built cleanly).
+
+
+
+
+
+
+
 
 

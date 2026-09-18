@@ -21,7 +21,22 @@ ScholeOS handles results, continuous assessments, broadsheets, fee collection, a
 - [x] **Wave 11: Admin Announcements & Multi-Channel Broadcasts** (Broadcast list page, full-page composer with audience scoping, In-App / SMS / WhatsApp delivery modes, scheduled timing, live card preview, and safety confirmation modal)
 - [x] **Wave 12: Admin Settings & Configuration** (Institutional profile editing, live branding preview with logo upload & preset swatches, repeatable classes and subjects with student deletion safety modal, 100% continuous assessment weight formula builder, and subscription plan tier upgrade modal with billing history)
 - [x] **Wave 13: Platform Super Admin Dashboard** (Internal multi-tenant command center across all onboarded schools, cross-platform metrics, Needs Attention expiring trials table, schools directory with manual onboarding & suspension safety modals, and SaaS billing revenue ledger)
-- 🏆 **ScholeOS All Waves 1–13 Complete & Production-Ready!**
+- 🏆 **Frontend Waves 1–13 Complete & Production-Ready!**
+
+---
+
+## ⚙️ Backend Wave Roadmap
+
+- [x] **Wave 1: Database Schema (Postgres) + Clerk Auth Setup** (Multi-tenant schema with Drizzle ORM, `school_id` isolation, 16 tables, Clerk Organization multi-role auth, Svix webhook verification, migrations & demo seed)
+- [x] **Wave 2: Firestore Real-Time Layer + Security Rules** (4 collections: scoreEntries, submissionStatus, reportCards, attendance; strict zero-client-write lockdown; schoolId custom claim read gating; App Check enforcement)
+- [x] **Wave 3: `identity-service`** (Cloudflare Worker: Clerk webhooks sync, admin staff provisioning & deactivation, Firebase custom token bridge with `{ schoolId, role }`, teacher `/assignments/me` schedule)
+- [x] **Wave 4: `academic-service`** (Score submission, continuous assessment computation, report card/broadsheet generation)
+- [x] **Wave 5: `fees-service`** (Invoices, payment webhooks, bank transfer verification queue)
+- [x] **Wave 6: `notification-service`** (SMS & WhatsApp dispatch via Cloudflare Queues)
+- [x] **Wave 7: `document-service`** (PDF report card generation, landscape broadsheets, payment receipts, student ID cards with SVG QR codes, Cloudinary asset storage, immutable document caching)
+- [x] **Wave 8: `licensing-service`** (Shared zero-network-hop license middleware, fail-safe write blocking, 7-day grace period, daily cron transitions, and Platform Super Admin endpoints)
+- [x] **Wave 9: `ai-service`** (Admin Copilot with 4 scoped tools, qualitative report card remarks generator with editable text, child-safe Socratic student tutor with homework-answer refusal & minors safety filters, Premium feature gating & 500k token quota tracker)
+- [x] **Wave 10: CBT Backend** (Question banks, timed examination sessions, answer key security stripping, server-side auto-grading against answer key, auto-submit on timeout, class analytics, and continuous assessment gradebook import)
 
 ---
 
@@ -41,7 +56,7 @@ ScholeOS handles results, continuous assessments, broadsheets, fee collection, a
 - Node.js (v18+)
 - npm or pnpm
 
-### Running Locally
+### Running Frontend
 ```bash
 # Navigate to frontend
 cd frontend
@@ -54,6 +69,22 @@ npm run dev
 ```
 
 Visit [http://localhost:5173](http://localhost:5173) in your browser.
+
+### Running Backend (Wave 1)
+```bash
+# Navigate to backend
+cd backend
+
+# Install dependencies
+npm install
+
+# Generate migrations
+npm run db:generate
+
+# Run development server / typecheck
+npm run dev
+npm run typecheck
+```
 
 ---
 

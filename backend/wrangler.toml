@@ -1,0 +1,32 @@
+# ScholeOS Identity Service — Cloudflare Worker Configuration
+name = "scholeos-identity-service"
+main = "src/services/identity/index.ts"
+compatibility_date = "2024-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+NODE_ENV = "production"
+FIREBASE_PROJECT_ID = "scholesos"
+
+# Secrets to configure in Cloudflare dashboard or via wrangler secret put:
+# - DATABASE_URL
+# - CLERK_SECRET_KEY
+# - CLERK_PUBLISHABLE_KEY
+# - CLERK_WEBHOOK_SIGNING_SECRET
+# - FIREBASE_CLIENT_EMAIL
+# - FIREBASE_PRIVATE_KEY
+# - PAYSTACK_SECRET_KEY
+# - FLUTTERWAVE_SECRET_HASH
+# - TERMII_API_KEY
+# - INTERNAL_SERVICE_SECRET
+
+# Wave 6: Cloudflare Queues Configuration
+[[queues.producers]]
+queue = "notifications-queue"
+binding = "NOTIFICATIONS_QUEUE"
+
+[[queues.consumers]]
+queue = "notifications-queue"
+max_batch_size = 10
+max_batch_timeout = 5
+max_retries = 3

@@ -1,0 +1,86 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * ScholeOS Firestore Security Rules (Wave 2)
+     * Project ID: scholesos
+     *
+     * CRITICAL ARCHITECTURAL INVARIANT:
+     * - Clients (Frontend / Mobile / Tablet apps) NEVER write directly to Firestore.
+     * - ALL writes MUST go through the backend Cloudflare Worker services using the
+     *   Firebase Admin SDK. The Worker explicitly verifies caller authorization against
+     *   the PostgreSQL `assignments` table before mutating any Firestore document.
+     * - Because Firestore rules cannot query external PostgreSQL databases, client writes
+     *   are strictly denied (`allow write: if false;`) across all collections.
+     * - Reads are gated by the custom JWT claim `schoolId`, which is set by `identity-service`
+     *   in Wave 3 upon user authentication.
+     */
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function belongsToSchool(schoolId) {
+      return isAuthenticated() && request.auth.token.schoolId == schoolId;
+    }
+
+    // Root-level school tenant container
+    match /schools/{schoolId} {
+
+      // Disallow reading or writing the school root document directly
+      allow read, write: if false;
+
+      // 1. Academic Term Scope
+      match /terms/{termId} {
+
+        // 1.1 Score Entries Collection
+        // Path: /schools/{schoolId}/terms/{termId}/scoreEntries/{entryId}
+        // Fields: studentId, subjectId, classId, teacherId, componentScores (map), total, status
+        match /scoreEntries/{entryId} {
+          allow read: if belongsToSchool(schoolId);
+          allow write: if false; // Only written server-side via Worker + Admin SDK
+        }
+
+        // 1.2 Per-Class Submission Status Document
+        // Path: /schools/{schoolId}/terms/{termId}/classes/{classId}/submissionStatus
+        // Fields: map of subjectId -> { status, teacherId }
+        // Listened to by Class Teacher's live grading tracker
+        match /classes/{classId}/submissionStatus {
+          allow read: if belongsToSchool(schoolId);
+          allow write: if false; // Only written server-side via Worker + Admin SDK
+        }
+
+        // 1.3 Report Cards Collection
+        // Path: /schools/{schoolId}/terms/{termId}/reportCards/{studentId}
+        // Fields: perSubjectTotals (map), overallTotal, average, position, comment, status
+        match /reportCards/{studentId} {
+          allow read: if belongsToSchool(schoolId);
+          allow write: if false; // Only written server-side via Worker + Admin SDK
+        }
+      }
+
+      // 2. Class Daily Attendance Collection
+      // Path: /schools/{schoolId}/classes/{classId}/attendance/{date}
+      // Fields: map of studentId -> status (present/absent/late), markedByStaffId
+      // Owned and marked by the designated Class Teacher
+      match /classes/{classId}/attendance/{date} {
+        allow read: if belongsToSchool(schoolId);
+        allow write: if false; // Only written server-side via Worker + Admin SDK
+      }
+
+      // Tenant Fallback: Any other nested collections under this school tenant
+      // allow read only if caller belongs to the school, but NEVER allow client write.
+      match /{allChildren=**} {
+        allow read: if belongsToSchool(schoolId);
+        allow write: if false;
+      }
+    }
+
+    // Global Catch-All: Deny all read and write requests outside /schools/{schoolId}
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

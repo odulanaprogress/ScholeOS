@@ -1,0 +1,51 @@
+{
+  "name": "scholeos-backend",
+  "version": "1.0.0",
+  "description": "ScholeOS Multi-Tenant School Management Platform Backend",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:seed": "tsx src/db/seed.ts",
+    "db:studio": "drizzle-kit studio",
+    "test:identity": "tsx src/services/identity/test-identity-service.ts",
+    "test:academic": "tsx src/services/academic/test-academic-service.ts",
+    "test:fees": "tsx src/services/fees/test-fees-service.ts",
+    "test:notification": "tsx src/services/notification/test-notification-service.ts",
+    "test:document": "tsx src/services/document/test-document-service.ts",
+    "test:licensing": "tsx src/services/licensing/test-licensing-service.ts",
+    "test:ai": "tsx src/services/ai/test-ai-service.ts",
+    "test:cbt": "tsx src/services/academic/test-cbt.ts"
+  },
+  "keywords": [
+    "scholeos",
+    "drizzle-orm",
+    "postgres",
+    "clerk",
+    "multi-tenant",
+    "school-management"
+  ],
+  "author": "ScholeOS Engineering",
+  "license": "MIT",
+  "dependencies": {
+    "@clerk/backend": "^1.24.0",
+    "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.39.3",
+    "firebase-admin": "^14.4.0",
+    "hono": "^4.13.8",
+    "postgres": "^3.4.5",
+    "svix": "^1.60.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "drizzle-kit": "^0.30.5",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}
