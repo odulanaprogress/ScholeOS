@@ -78,3 +78,6 @@ app.onError((err, c) => {
 export default {
   fetch: app.fetch,
 };
+
+export { app };
+

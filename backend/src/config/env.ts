@@ -5,6 +5,7 @@ dotenv.config();
 
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+  DIRECT_URL: z.string().optional(),
   CLERK_SECRET_KEY: z.string().default("sk_test_placeholder_key"),
   CLERK_PUBLISHABLE_KEY: z.string().default("pk_test_placeholder_key"),
   CLERK_WEBHOOK_SIGNING_SECRET: z.string().default("whsec_placeholder_secret"),
@@ -17,9 +18,10 @@ const envSchema = z.object({
   // Wave 5: Fees Service
   PAYSTACK_SECRET_KEY: z.string().default("sk_test_paystack_placeholder"),
   FLUTTERWAVE_SECRET_HASH: z.string().default("flw_secret_hash_placeholder"),
-  CLOUDINARY_CLOUD_NAME: z.string().default("scholesos"),
+  CLOUDINARY_CLOUD_NAME: z.string().default("dfbzi8cmh"),
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),
+  CLOUDINARY_UPLOAD_PRESET: z.string().default("scholeos"),
   // Wave 6: Notification Service
   TERMII_API_KEY: z.string().default("termii_test_api_key"),
   TERMII_SENDER_ID: z.string().default("ScholeOS"),

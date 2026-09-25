@@ -9,7 +9,9 @@ import {
   ChevronDown,
   CheckCheck,
   Clock,
+  ShieldCheck,
 } from 'lucide-react'
+import { useUser, useClerk } from '@clerk/clerk-react'
 import { cn } from '@/utils/cn'
 
 export interface TopBarProps {
@@ -39,6 +41,14 @@ export const TopBar: React.FC<TopBarProps> = ({
   onOpenProfile,
   className,
 }) => {
+  const { isSignedIn, user } = useUser()
+  const { signOut } = useClerk()
+
+  const effectiveName = (isSignedIn && user?.fullName) ? user.fullName : adminName
+  const effectiveEmail = (isSignedIn && user?.primaryEmailAddress?.emailAddress) ? user.primaryEmailAddress.emailAddress : 'admin@crownacademy.ng'
+  const effectiveAvatar = (isSignedIn && user?.imageUrl) ? user.imageUrl : adminAvatarUrl
+  const effectiveRole = (isSignedIn && (user?.publicMetadata as any)?.role) ? String((user?.publicMetadata as any)?.role) : adminRole
+
   const [searchQuery, setSearchQuery] = useState('')
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
@@ -219,15 +229,15 @@ export const TopBar: React.FC<TopBarProps> = ({
             className="flex items-center gap-2.5 p-1 sm:px-2 py-1 rounded-full hover:bg-cream-base transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-brand/30"
             aria-label="User menu"
           >
-            {adminAvatarUrl ? (
+            {effectiveAvatar ? (
               <img
-                src={adminAvatarUrl}
-                alt={adminName}
+                src={effectiveAvatar}
+                alt={effectiveName}
                 className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border border-cream-border"
               />
             ) : (
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-indigo-brand to-indigo-hover text-white flex items-center justify-center font-display font-bold text-xs sm:text-sm shadow-xs">
-                {adminName
+                {effectiveName
                   .split(' ')
                   .map((n) => n[0])
                   .filter(Boolean)
@@ -238,10 +248,10 @@ export const TopBar: React.FC<TopBarProps> = ({
 
             <div className="hidden sm:block text-left">
               <p className="text-xs font-bold text-charcoal-dark leading-tight truncate max-w-[120px]">
-                {adminName}
+                {effectiveName}
               </p>
               <p className="text-[11px] text-charcoal-muted/70 truncate max-w-[120px]">
-                {adminRole}
+                {effectiveRole}
               </p>
             </div>
 
@@ -250,10 +260,18 @@ export const TopBar: React.FC<TopBarProps> = ({
 
           {/* Profile Dropdown Menu */}
           {isProfileOpen && (
-            <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-cream-border p-2 z-50 animate-fadeIn space-y-1">
+            <div className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-cream-border p-2 z-50 animate-fadeIn space-y-1">
               <div className="px-3 py-2 border-b border-cream-border/70 mb-1">
-                <p className="text-xs font-bold text-charcoal-dark truncate">{adminName}</p>
-                <p className="text-[11px] text-charcoal-muted/70 truncate">admin@crownacademy.ng</p>
+                <div className="flex items-center justify-between gap-1">
+                  <p className="text-xs font-bold text-charcoal-dark truncate">{effectiveName}</p>
+                  {isSignedIn && (
+                    <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-indigo-brand bg-indigo-light px-1.5 py-0.2 rounded-full">
+                      <ShieldCheck className="w-2.5 h-2.5" />
+                      Clerk
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-charcoal-muted/70 truncate">{effectiveEmail}</p>
               </div>
 
               <button
@@ -283,8 +301,15 @@ export const TopBar: React.FC<TopBarProps> = ({
               <div className="pt-1 border-t border-cream-border/70">
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
                     setIsProfileOpen(false)
+                    if (isSignedIn) {
+                      try {
+                        await signOut()
+                      } catch (err) {
+                        console.warn('[Clerk] signOut error:', err)
+                      }
+                    }
                     if (onLogout) onLogout()
                   }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors"

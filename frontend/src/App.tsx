@@ -1062,9 +1062,26 @@ function App() {
         <LoginPage
           onNavigateToOnboarding={() => setCurrentView('onboarding')}
           onNavigateToHome={() => setCurrentView('landing')}
-          onLoginSuccess={() => {
-            setActiveAdminNavId('overview')
-            setCurrentView('admin-overview')
+          onLoginSuccess={(role) => {
+            if (role === 'teacher') {
+              setActiveTeacherNavId('overview')
+              setCurrentView('teacher-overview')
+            } else if (role === 'class-teacher') {
+              setActiveClassTeacherNavId('overview')
+              setCurrentView('class-teacher-overview')
+            } else if (role === 'parent') {
+              setActiveParentNavId('overview')
+              setCurrentView('parent-overview')
+            } else if (role === 'student') {
+              setActiveStudentNavId('overview')
+              setCurrentView('student-overview')
+            } else if (role === 'super-admin') {
+              setActiveSuperAdminNavId('overview')
+              setCurrentView('super-admin-overview')
+            } else {
+              setActiveAdminNavId('overview')
+              setCurrentView('admin-overview')
+            }
           }}
         />
       )}

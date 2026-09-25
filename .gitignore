@@ -24,3 +24,12 @@ Thumbs.db
 .env
 .env.local
 .env.production
+.dev.vars
+.dev.vars.*
+.wrangler/
+
+# Agent and tooling configs
+.agents/
+.claude/
+agent/
+skills-lock.json

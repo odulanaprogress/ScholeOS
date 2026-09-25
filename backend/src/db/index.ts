@@ -8,6 +8,7 @@ import { env } from "../config/env";
  * Compatible with Neon, Supabase, AWS RDS, Docker, and local PostgreSQL.
  */
 export const client = postgres(env.DATABASE_URL, {
+  prepare: false, // Required for Supabase transaction pooler (port 6543)
   max: env.NODE_ENV === "production" ? 10 : 5,
   idle_timeout: 20,
   connect_timeout: 10,
