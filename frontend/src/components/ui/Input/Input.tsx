@@ -1,4 +1,4 @@
-import React, { forwardRef, useId } from 'react'
+import React, { forwardRef } from 'react'
 import { cn } from '@/utils/cn'
 import { AlertCircle } from 'lucide-react'
 
@@ -25,8 +25,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     },
     ref
   ) => {
-    const generatedId = useId()
-    const inputId = id || generatedId
+    const inputId = id || (label ? `input-${label.toLowerCase().replace(/[^a-z0-9]/g, '-')}` : undefined)
     const hasError = Boolean(error)
 
     return (

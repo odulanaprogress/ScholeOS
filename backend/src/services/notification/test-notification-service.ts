@@ -7,6 +7,8 @@
  */
 
 import { app } from "./index";
+import { db } from "../../db/index";
+import { schools } from "../../db/schema/schools";
 import { notifications } from "../../db/schema/notifications";
 import { announcements } from "../../db/schema/announcements";
 import { renderNotificationTemplate } from "./templates";
@@ -188,6 +190,14 @@ async function runNotificationServiceTests() {
 
   // 6. Valid Enqueue Dispatch via POST /notify
   console.log("\n6️⃣ Verifying Notification Enqueueing via POST /notify...");
+  let targetSchoolId = "00000000-0000-0000-0000-000000000001";
+  try {
+    const [existing] = await db.select({ id: schools.id }).from(schools).limit(1);
+    if (existing?.id) targetSchoolId = existing.id;
+  } catch {
+    // offline fallback
+  }
+
   const notifyRes = await app.request("/notify", {
     method: "POST",
     headers: {
@@ -195,7 +205,7 @@ async function runNotificationServiceTests() {
       "x-internal-service-secret": "scholeos_internal_secret_key",
     },
     body: JSON.stringify({
-      schoolId: "00000000-0000-0000-0000-000000000001",
+      schoolId: targetSchoolId,
       channel: "sms",
       recipientType: "parent",
       recipientId: "00000000-0000-0000-0000-000000000002",
@@ -217,7 +227,7 @@ async function runNotificationServiceTests() {
 
   // Direct Queue Consumer execution check
   const consumerResult = await processNotificationMessage({
-    schoolId: "00000000-0000-0000-0000-000000000001",
+    schoolId: targetSchoolId,
     channel: "sms",
     recipientType: "parent",
     recipientId: "00000000-0000-0000-0000-000000000002",
@@ -235,7 +245,7 @@ async function runNotificationServiceTests() {
 
   // In-app channel test
   const inAppResult = await processNotificationMessage({
-    schoolId: "00000000-0000-0000-0000-000000000001",
+    schoolId: targetSchoolId,
     channel: "in_app",
     recipientType: "staff",
     recipientId: "00000000-0000-0000-0000-000000000003",

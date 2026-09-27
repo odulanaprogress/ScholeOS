@@ -31,7 +31,9 @@ export async function resolveRecipientPhone(
         .from(guardians)
         .where(eq(guardians.id, recipientId))
         .limit(1);
-      return { phone: guardian?.phone || null, name: guardian?.name || null };
+      if (guardian?.phone) {
+        return { phone: guardian.phone, name: guardian.name || null };
+      }
     }
 
     if (recipientType === "staff") {
@@ -40,7 +42,9 @@ export async function resolveRecipientPhone(
         .from(staff)
         .where(eq(staff.id, recipientId))
         .limit(1);
-      return { phone: staffRec?.phone || null, name: staffRec?.name || null };
+      if (staffRec?.phone) {
+        return { phone: staffRec.phone, name: staffRec.name || null };
+      }
     }
 
     if (recipientType === "student") {
@@ -56,9 +60,10 @@ export async function resolveRecipientPhone(
           .from(guardians)
           .where(eq(guardians.id, student.guardianId))
           .limit(1);
-        return { phone: guardian?.phone || null, name: student?.name || null };
+        if (guardian?.phone) {
+          return { phone: guardian.phone, name: student?.name || null };
+        }
       }
-      return { phone: null, name: student?.name || null };
     }
   } catch (err) {
     console.warn("[Queue Consumer] Database phone lookup offline/warning:", err);
