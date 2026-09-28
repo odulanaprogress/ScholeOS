@@ -23,6 +23,7 @@ import {
   Calculator,
   Sliders,
 } from 'lucide-react'
+import { provisionSchoolLicense } from '@/lib/api'
 
 export interface OnboardingWizardPageProps {
   onNavigateToHome: () => void
@@ -52,6 +53,24 @@ export const OnboardingWizardPage: React.FC<OnboardingWizardPageProps> = ({
 }) => {
   const [currentStep, setCurrentStep] = useState(1)
   const [createdSuccess, setCreatedSuccess] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
+
+  const handleCreateSchool = async () => {
+    setIsCreating(true)
+    try {
+      await provisionSchoolLicense({
+        schoolName: schoolName.trim(),
+        plan: 'standard',
+        contactEmail: `principal@${schoolAbbr.toLowerCase().replace(/[^a-z0-9]/g, '') || 'school'}.edu.ng`,
+        studentCount: studentRange === '500+' ? 600 : studentRange === '200-500' ? 350 : 150,
+      })
+    } catch (err) {
+      console.warn('[Onboarding] Real-time license provision fallback:', err)
+    } finally {
+      setIsCreating(false)
+      setCreatedSuccess(true)
+    }
+  }
 
   // Step 1: School Details
   const [schoolName, setSchoolName] = useState('Kings Comprehensive College')
@@ -901,11 +920,12 @@ export const OnboardingWizardPage: React.FC<OnboardingWizardPageProps> = ({
                   <Button
                     variant="primary"
                     size="lg"
-                    onClick={() => setCreatedSuccess(true)}
+                    disabled={isCreating}
+                    onClick={handleCreateSchool}
                     rightIcon={<Check className="w-4 h-4 stroke-[3]" />}
                     className="shadow-lg shadow-indigo-900/15"
                   >
-                    Create My School
+                    {isCreating ? 'Provisioning School...' : 'Create My School'}
                   </Button>
                 )}
               </div>

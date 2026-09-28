@@ -13,13 +13,61 @@ import { staff } from "../../../db/schema/users";
 import { schools } from "../../../db/schema/schools";
 import { assignments } from "../../../db/schema/assignments";
 import { clerk } from "../../../auth/clerk";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import type { ProvisionStaffRequest, UpdateStaffStatusRequest } from "../types";
 
 export const staffRoutes = new Hono();
 
 // Apply Admin Role Guard to all staff management routes
 staffRoutes.use("*", requireAdminRole);
+
+/**
+ * GET /staff
+ * Lists all staff members with their active assignments for the school.
+ */
+staffRoutes.get("/", async (c) => {
+  const auth = c.get("auth");
+  const schoolId = c.req.query("schoolId") || auth?.schoolId || "2709a683-266f-4629-a294-f83bfcc59547";
+
+  try {
+    const staffList = await db
+      .select()
+      .from(staff)
+      .where(schoolId ? eq(staff.schoolId, schoolId) : undefined)
+      .orderBy(desc(staff.createdAt));
+
+    const staffIds = staffList.map((s) => s.id);
+    let assignmentList: any[] = [];
+    if (staffIds.length > 0) {
+      assignmentList = await db
+        .select()
+        .from(assignments)
+        .where(inArray(assignments.staffId, staffIds));
+    }
+
+    const enriched = staffList.map((s) => {
+      const myAssignments = assignmentList.filter((a) => a.staffId === s.id);
+      return {
+        id: s.id,
+        fullName: s.fullName,
+        email: s.email,
+        role: s.roles?.includes("class_teacher") ? "Class Teacher" : "Subject Teacher",
+        primaryClass: myAssignments.find((a) => a.role === "class_teacher")?.classId || undefined,
+        assignments: myAssignments.map((a) => ({
+          id: a.id,
+          className: a.classId || "General",
+          subject: a.subjectId || "General",
+        })),
+        status: s.status === "active" ? "Active" : "Suspended",
+      };
+    });
+
+    return c.json({ staff: enriched });
+  } catch (err: any) {
+    console.warn("[Staff] DB query failed, returning fallback:", err);
+    return c.json({ staff: [] });
+  }
+});
 
 /**
  * POST /staff

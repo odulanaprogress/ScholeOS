@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { useUser, useClerk } from '@clerk/clerk-react'
 import { cn } from '@/utils/cn'
+import { ServerStatusBadge } from '@/components/ui/ServerStatusBadge'
 
 export interface TopBarProps {
   isSidebarCollapsed?: boolean
@@ -137,9 +138,12 @@ export const TopBar: React.FC<TopBarProps> = ({
       </div>
 
       {/* Right section: Notifications + User Avatar */}
-      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Real-Time Backend & Database Connection Telemetry */}
+        <ServerStatusBadge />
+
         {/* Quick status pill on larger screens */}
-        <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-full text-xs text-emerald-800 font-medium">
+        <div className="hidden xl:flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-full text-xs text-emerald-800 font-medium">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           <span>2025/2026 • 2nd Term Active</span>
         </div>

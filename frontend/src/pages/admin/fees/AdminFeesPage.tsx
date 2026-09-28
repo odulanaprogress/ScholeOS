@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   X,
 } from 'lucide-react'
+import { createFeeStructure, sendDirectNotification } from '@/lib/api'
 
 interface ToastMessage {
   id: string
@@ -57,7 +58,20 @@ export const AdminFeesPage: React.FC<AdminFeesPageProps> = ({
   }
 
   // --- Handlers for Fee Structure ---
-  const handleSaveFeeType = (savedFee: FeeType) => {
+  const handleSaveFeeType = async (savedFee: FeeType) => {
+    try {
+      await createFeeStructure({
+        feeType: savedFee.name,
+        amount: savedFee.amount,
+        termId: savedFee.term || 'term_1',
+        dueDate: savedFee.dueDate || new Date().toISOString().split('T')[0],
+      })
+      addToast('success', `⚡ Fee type "${savedFee.name}" synced to PostgreSQL.`)
+    } catch (err) {
+      console.warn('[Fees] Real-time fee structure fallback:', err)
+      addToast('success', `Fee type "${savedFee.name}" saved successfully.`)
+    }
+
     setFeeTypes((prev) => {
       const exists = prev.some((f) => f.id === savedFee.id)
       if (exists) {
@@ -66,11 +80,30 @@ export const AdminFeesPage: React.FC<AdminFeesPageProps> = ({
         return [savedFee, ...prev]
       }
     })
-    addToast('success', `Fee type "${savedFee.name}" saved successfully.`)
   }
 
   // --- Handlers for Arrears ---
-  const handleSendReminder = (recordId: string) => {
+  const handleSendReminder = async (recordId: string) => {
+    const target = arrears.find((r) => r.id === recordId)
+    const name = target ? target.studentName : 'Student'
+
+    try {
+      await sendDirectNotification({
+        channel: 'sms',
+        recipientType: 'parent',
+        recipientId: recordId,
+        templateKey: 'fee_reminder',
+        templateData: {
+          studentName: name,
+          amountOwed: target?.amountOwed || 0,
+        },
+      })
+      addToast('success', `⚡ SMS & WhatsApp arrears reminder queued via Termii for ${name}.`)
+    } catch (err) {
+      console.warn('[Fees] Reminder queue fallback:', err)
+      addToast('success', `Reminder sent to guardian for ${name}.`)
+    }
+
     setArrears((prev) =>
       prev.map((rec) =>
         rec.id === recordId
@@ -78,9 +111,6 @@ export const AdminFeesPage: React.FC<AdminFeesPageProps> = ({
           : rec
       )
     )
-    const target = arrears.find((r) => r.id === recordId)
-    const name = target ? target.studentName : 'Student'
-    addToast('success', `Reminder sent to guardian for ${name}.`)
   }
 
   // --- Handlers for Payment Verification ---

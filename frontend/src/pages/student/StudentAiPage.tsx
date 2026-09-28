@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { ChatWindow, type ChatMessage } from '@/components/ui/ChatWindow'
 import { BookOpen, GraduationCap } from 'lucide-react'
+import { sendStudentAiChat } from '@/lib/api'
 
 export interface StudentAiPageProps {
   studentName?: string
@@ -135,7 +136,7 @@ In **${classNameTitle}**, mastering this foundation prepares you directly for yo
 To help you best: Are you working through a specific textbook exercise, or reviewing a class handout from your teacher? Tell me a bit more and we'll tackle it together!`
   }
 
-  const handleSendMessage = (text: string) => {
+  const handleSendMessage = async (text: string) => {
     const userMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
       sender: 'user',
@@ -146,7 +147,23 @@ To help you best: Are you working through a specific textbook exercise, or revie
     setMessages((prev) => [...prev, userMsg])
     setIsTyping(true)
 
-    setTimeout(() => {
+    try {
+      const history = messages.map((m) => ({
+        role: (m.sender === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
+        content: m.text,
+      }))
+
+      // Call live backend Student Socratic Tutor API
+      const aiResult = await sendStudentAiChat(text, selectedSubject, history)
+      const assistantMsg: ChatMessage = {
+        id: `tutor-${Date.now()}`,
+        sender: 'assistant',
+        text: aiResult.response,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }
+      setMessages((prev) => [...prev, assistantMsg])
+    } catch (err) {
+      console.warn('[Student Tutor] Backend offline/fallback:', err)
       const responseText = getStudentAiResponse(text, selectedSubject)
       const assistantMsg: ChatMessage = {
         id: `tutor-${Date.now()}`,
@@ -155,8 +172,9 @@ To help you best: Are you working through a specific textbook exercise, or revie
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       }
       setMessages((prev) => [...prev, assistantMsg])
+    } finally {
       setIsTyping(false)
-    }, 800)
+    }
   }
 
   return (

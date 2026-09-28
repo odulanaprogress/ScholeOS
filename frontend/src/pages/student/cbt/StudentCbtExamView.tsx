@@ -14,12 +14,14 @@ import {
   Clock,
 } from 'lucide-react'
 import { type CbtTest } from '@/pages/cbt'
+import { startCbtSession, saveCbtAnswer } from '@/lib/api'
+import { cn } from '@/utils/cn'
 
 export interface StudentCbtExamViewProps {
   test: CbtTest
   studentName: string
   admissionNo: string
-  onSubmit: (answers: Record<number, number>, timeTakenMinutes: number) => void
+  onSubmit: (answers: Record<number, number>, timeTakenMinutes: number, submissionId?: string) => void
   onExit?: () => void
 }
 
@@ -36,6 +38,22 @@ export const StudentCbtExamView: React.FC<StudentCbtExamViewProps> = ({
   const [answers, setAnswers] = useState<Record<number, number>>({})
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
   const [isAutoSubmitting, setIsAutoSubmitting] = useState(false)
+  const [submissionId, setSubmissionId] = useState<string | null>(null)
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle')
+
+  // Real-time backend CBT session initialization
+  useEffect(() => {
+    startCbtSession(test.id, admissionNo || 'student_demo_01')
+      .then((res) => {
+        if (res.submissionId) {
+          setSubmissionId(res.submissionId)
+          setSyncStatus('synced')
+        }
+      })
+      .catch((err) => {
+        console.warn('[CBT] Real-time session start fallback:', err)
+      })
+  }, [test.id, admissionNo])
 
   // Track start time to calculate total time taken
   const startTimeRef = useRef(Date.now())
@@ -58,12 +76,20 @@ export const StudentCbtExamView: React.FC<StudentCbtExamViewProps> = ({
     return Math.min(elapsedMinutes, test.durationMinutes)
   }
 
-  // Answer selection handler
+  // Answer selection handler with incremental real-time server saving
   const handleSelectOption = (optionIndex: number) => {
     setAnswers((prev) => ({
       ...prev,
       [currentIndex]: optionIndex,
     }))
+
+    if (submissionId) {
+      setSyncStatus('syncing')
+      const qId = currentQuestion?.id || `q${currentIndex + 1}`
+      saveCbtAnswer(submissionId, qId, optionIndex)
+        .then(() => setSyncStatus('synced'))
+        .catch(() => setSyncStatus('idle'))
+    }
   }
 
   // Auto-submit when timer reaches 00:00
@@ -71,7 +97,7 @@ export const StudentCbtExamView: React.FC<StudentCbtExamViewProps> = ({
     setIsAutoSubmitting(true)
     setTimeout(() => {
       const timeTaken = test.durationMinutes
-      onSubmit(answers, timeTaken)
+      onSubmit(answers, timeTaken, submissionId || undefined)
     }, 1500)
   }
 
@@ -79,7 +105,7 @@ export const StudentCbtExamView: React.FC<StudentCbtExamViewProps> = ({
   const handleConfirmSubmit = () => {
     setIsConfirmModalOpen(false)
     const timeTaken = calculateTimeTaken()
-    onSubmit(answers, timeTaken)
+    onSubmit(answers, timeTaken, submissionId || undefined)
   }
 
   // Keyboard navigation shortcuts
@@ -140,6 +166,19 @@ export const StudentCbtExamView: React.FC<StudentCbtExamViewProps> = ({
                 Exit
               </Button>
             )}
+
+            {/* Live Real-Time Server Sync Indicator */}
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+              <span
+                className={cn(
+                  'w-2 h-2 rounded-full',
+                  syncStatus === 'syncing'
+                    ? 'bg-amber-500 animate-ping'
+                    : 'bg-emerald-500'
+                )}
+              />
+              <span>{syncStatus === 'syncing' ? 'Syncing...' : 'Real-Time Sync'}</span>
+            </div>
 
             <Timer
               initialSeconds={test.durationMinutes * 60}

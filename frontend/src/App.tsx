@@ -98,6 +98,7 @@ import {
   Building2,
   ShieldCheck,
 } from 'lucide-react'
+import { dispatchAnnouncement, submitCbtSession } from '@/lib/api'
 
 type AppView =
   | 'landing'
@@ -343,27 +344,49 @@ function App() {
     }
   }
 
-  const handleStudentExamSubmit = (
+  const handleStudentExamSubmit = async (
     testAnswers: Record<number, number>,
-    timeTakenMinutes: number
+    timeTakenMinutes: number,
+    serverSubmissionId?: string
   ) => {
     const currentTest = activeExamTest || cbtTests[0]
     let earnedPoints = 0
-    currentTest.questions.forEach((q, idx) => {
-      if (testAnswers[idx] === q.correctOptionIndex) {
-        earnedPoints += q.points
+    let totalPoints = currentTest.totalPoints
+    let examStatus: 'completed' | 'incomplete' | 'not_started' = 'completed'
+
+    if (serverSubmissionId) {
+      try {
+        const serverGrading = await submitCbtSession(
+          serverSubmissionId,
+          timeTakenMinutes * 60
+        )
+        earnedPoints = serverGrading.score
+        totalPoints = serverGrading.totalPoints || currentTest.totalPoints
+      } catch (err) {
+        console.warn('[CBT] Server grading fallback:', err)
+        currentTest.questions.forEach((q, idx) => {
+          if (testAnswers[idx] === q.correctOptionIndex) {
+            earnedPoints += q.points
+          }
+        })
       }
-    })
+    } else {
+      currentTest.questions.forEach((q, idx) => {
+        if (testAnswers[idx] === q.correctOptionIndex) {
+          earnedPoints += q.points
+        }
+      })
+    }
 
     const newSub: StudentCbtSubmission = {
-      id: `sub-${Date.now()}`,
+      id: serverSubmissionId || `sub-${Date.now()}`,
       testId: currentTest.id,
       studentName: 'Fatima Bello',
       admissionNo: 'JSS2/003',
       score: earnedPoints,
-      totalPoints: currentTest.totalPoints,
+      totalPoints,
       timeTakenMinutes,
-      status: 'completed',
+      status: examStatus,
       answers: testAnswers,
       submittedAt:
         new Date().toLocaleDateString('en-GB', {
@@ -387,13 +410,21 @@ function App() {
   const [adminAnnouncements, setAdminAnnouncements] = useState<AdminAnnouncement[]>(INITIAL_ADMIN_ANNOUNCEMENTS)
   const [editingAnnouncement, setEditingAnnouncement] = useState<AdminAnnouncement | null>(null)
 
-  const handleSaveAnnouncement = (
+  const handleSaveAnnouncement = async (
     ann: AdminAnnouncement,
     targetStatus: 'sent' | 'scheduled' | 'draft'
   ) => {
     const updatedAnn: AdminAnnouncement = {
       ...ann,
       status: targetStatus,
+    }
+
+    if (targetStatus === 'sent') {
+      try {
+        await dispatchAnnouncement(updatedAnn.id)
+      } catch (err) {
+        console.warn('[Announcements] Real-time dispatch warning:', err)
+      }
     }
 
     setAdminAnnouncements((prev) => {

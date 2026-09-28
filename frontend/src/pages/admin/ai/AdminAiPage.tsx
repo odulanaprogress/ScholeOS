@@ -22,8 +22,12 @@ import {
   REPORT_CARD_SUBJECTS,
   REPORT_CARD_TONES,
   getAdminAiResponse,
-  generateReportCardComment,
+  generateReportCardComment as fallbackGenerateComment,
 } from './adminAiData'
+import {
+  sendAdminAiChat,
+  generateReportCardComment as generateAiReportCardComment,
+} from '@/lib/api'
 
 export const AdminAiPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('chat')
@@ -32,7 +36,7 @@ export const AdminAiPage: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isTyping, setIsTyping] = useState<boolean>(false)
 
-  const handleSendMessage = (text: string) => {
+  const handleSendMessage = async (text: string) => {
     const userMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
       sender: 'user',
@@ -43,8 +47,25 @@ export const AdminAiPage: React.FC = () => {
     setMessages((prev) => [...prev, userMsg])
     setIsTyping(true)
 
-    // Simulate AI thinking and response delay
-    setTimeout(() => {
+    try {
+      // Build conversation history for multi-turn context
+      const history = messages.map((m) => ({
+        role: (m.sender === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
+        content: m.text,
+      }))
+
+      // Call live backend AI Copilot
+      const aiResult = await sendAdminAiChat(text, history)
+      const assistantMsg: ChatMessage = {
+        id: `ai-${Date.now()}`,
+        sender: 'assistant',
+        text: aiResult.response,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }
+      setMessages((prev) => [...prev, assistantMsg])
+    } catch (err: any) {
+      console.warn('[Admin AI] Backend offline/fallback:', err)
+      // Fallback response
       const responseText = getAdminAiResponse(text)
       const assistantMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
@@ -53,8 +74,9 @@ export const AdminAiPage: React.FC = () => {
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       }
       setMessages((prev) => [...prev, assistantMsg])
+    } finally {
       setIsTyping(false)
-    }, 850)
+    }
   }
 
   // --- REPORT CARD COMMENTS STATE ---
@@ -70,20 +92,35 @@ export const AdminAiPage: React.FC = () => {
 
   const activeStudent = REPORT_CARD_STUDENTS.find((s) => s.id === selectedStudentId) || REPORT_CARD_STUDENTS[0]
 
-  const handleGenerateComment = () => {
+  const handleGenerateComment = async () => {
     setIsGenerating(true)
-    setTimeout(() => {
-      const nextIter = iteration + 1
-      setIteration(nextIter)
-      const comment = generateReportCardComment(
-        activeStudent.name,
-        selectedSubject,
-        selectedTone,
-        nextIter
-      )
-      setGeneratedComment(comment)
-      setIsGenerating(false)
-    }, 400)
+    try {
+      const res = await generateAiReportCardComment({
+        studentId: activeStudent.id,
+        termId: 'term_1_demo',
+        tone: selectedTone.toLowerCase() as any,
+        customObservations: `Subject: ${selectedSubject}`,
+      })
+      if (res?.comment) {
+        setGeneratedComment(res.comment)
+        setIteration((prev) => prev + 1)
+        setIsGenerating(false)
+        return
+      }
+    } catch (err) {
+      console.warn('[AI Comment] Backend offline/fallback:', err)
+    }
+
+    const nextIter = iteration + 1
+    setIteration(nextIter)
+    const comment = fallbackGenerateComment(
+      activeStudent.name,
+      selectedSubject,
+      selectedTone,
+      nextIter
+    )
+    setGeneratedComment(comment)
+    setIsGenerating(false)
   }
 
   const handleInsertComment = () => {

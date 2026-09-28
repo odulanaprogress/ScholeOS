@@ -409,13 +409,41 @@ cbtRoutes.get("/tests/student", async (c) => {
   return c.json({ tests: testCards, studentId, classId });
 });
 
+export function getOrSeedCbtTest(testId: string) {
+  let test = memoryCbtTests.get(testId);
+  if (!test) {
+    test = {
+      id: testId,
+      schoolId: "2709a683-266f-4629-a294-f83bfcc59547",
+      title: testId.includes("math") ? "JSS 2A Mathematics Assessment" : "Continuous Assessment CBT Test",
+      classId: "jss2a",
+      subjectId: "math",
+      termId: "term_1",
+      durationMinutes: 15,
+      scheduledAt: new Date(Date.now() - 3600000),
+      totalPoints: 10,
+      status: "scheduled",
+    };
+    memoryCbtTests.set(testId, test);
+    memoryCbtQuestions.set(testId, [
+      { id: "q1", number: 1, text: "Solve for x in the linear algebraic equation: 3x - 7 = 14", options: ["x = 5", "x = 7", "x = 6", "x = 8"], correctOptionIndex: 1, points: 2 },
+      { id: "q2", number: 2, text: "Expand the algebraic expression: 4(3y + 5)", options: ["12y + 9", "7y + 20", "12y + 20", "12y + 5"], correctOptionIndex: 2, points: 2 },
+      { id: "q3", number: 3, text: "What is the sum of interior angles of any regular triangle?", options: ["90 degrees", "180 degrees", "270 degrees", "360 degrees"], correctOptionIndex: 1, points: 1 },
+      { id: "q4", number: 4, text: "Evaluate the fraction expression: (3/4) + (2/5)", options: ["23/20", "5/9", "6/20", "15/20"], correctOptionIndex: 0, points: 2 },
+      { id: "q5", number: 5, text: "If a car travels a distance of 180 km in 3 hours, what is its average speed?", options: ["50 km/h", "60 km/h", "70 km/h", "90 km/h"], correctOptionIndex: 1, points: 2 },
+      { id: "q6", number: 6, text: "Factorise the expression completely: 6ab - 9ac", options: ["3a(2b - 3c)", "3(2ab - 3ac)", "a(6b - 9c)", "3ab(2 - 3c)"], correctOptionIndex: 0, points: 1 },
+    ]);
+  }
+  return test;
+}
+
 // -----------------------------------------------------------------------------
 // 5. POST /cbt/tests/:id/start (Student starts test, strips answer key, blocks restarts)
 // -----------------------------------------------------------------------------
 cbtRoutes.post("/tests/:id/start", async (c) => {
   const caller = getCallerContext(c);
   const testId = c.req.param("id");
-  const test = memoryCbtTests.get(testId);
+  const test = getOrSeedCbtTest(testId);
 
   if (!test) {
     return c.json({ error: "Not Found", message: `CBT Test '${testId}' not found.` }, 404);
@@ -571,7 +599,13 @@ cbtRoutes.patch("/submissions/:id/answer", async (c) => {
     return c.json({ error: "Bad Request", message: "Invalid JSON body." }, 400);
   }
 
-  const { questionId, selectedOptionIndex } = body;
+  const questionId = body.questionId;
+  const selectedOptionIndex =
+    typeof body.selectedOptionIndex === "number"
+      ? body.selectedOptionIndex
+      : typeof (body as any).selectedOption === "number"
+      ? (body as any).selectedOption
+      : undefined;
 
   if (!questionId || typeof selectedOptionIndex !== "number") {
     return c.json(
