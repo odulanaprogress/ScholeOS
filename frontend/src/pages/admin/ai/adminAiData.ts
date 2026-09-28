@@ -5,8 +5,20 @@ export const ADMIN_SUGGESTED_PROMPTS = [
   "Summarize today's attendance across the school",
 ]
 
+function getSchoolName(): string {
+  try {
+    const raw = localStorage.getItem('scholeos_active_school')
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (parsed?.name) return parsed.name
+    }
+  } catch {}
+  return 'Apex International College'
+}
+
 export function getAdminAiResponse(prompt: string): string {
   const lower = prompt.toLowerCase()
+  const schoolName = getSchoolName()
 
   if (lower.includes('behind on fees') || lower.includes('arrears') || lower.includes('debtor') || lower.includes('fee')) {
     return `Based on live Bursary records for 2nd Term 2025/2026:
@@ -30,26 +42,19 @@ Total school arrears currently stand at **₦660,000** across 8 debtors. Would y
 • **Mathematics:** +5.1% improvement (Average: 76.4%) following the Welcome Back diagnostic remedial classes.
 • **English Language:** +2.8% (Average: 73.1%).
 • **Basic Science:** Steady at 75.0%.
-• **Top Performing Arm:** **JSS 2A** (Average: 76.9% • Form Master: Mrs. Bola Adeyemi).
+• **Top Performing Arm:** **JSS 2A** (Average: 76.9% • Form Master: Mr. Babatunde Adeyemi).
 
 All continuous assessments have been verified and sealed on the master broadsheet.`
   }
 
   if (lower.includes('submitted') || lower.includes('classes have fully') || lower.includes('results')) {
-    return `Status of Score Submissions across Crown Academy Lagos:
+    return `Status of Score Submissions across ${schoolName}:
 
-• **Fully Submitted Classes (6 / 10):**
-  - JSS 2A (Published & Locked • Form Master: Mrs. Bola Adeyemi)
-  - JSS 2B (8 / 8 Submitted)
-  - JSS 3 (8 / 8 Submitted)
+• **Fully Submitted Classes:**
+  - JSS 2A (Published & Locked • Form Master: Mr. Babatunde Adeyemi)
+  - JSS 1A (All subjects verified)
   - SSS 1 Science (Published & Locked)
-  - SSS 1 Arts (8 / 8 Submitted)
-  - SSS 3 (8 / 8 Submitted)
-
-• **Pending Submissions (4 / 10):**
-  - **SSS 2:** 2 subjects remaining (Further Mathematics & Economics)
-  - **JSS 1:** 1 subject remaining (French Language)
-  - **Primary 5 & 6:** Awaiting terminal practical grades.
+  - SS 2 Commercial (All subjects verified)
 
 The deadline for terminal broadsheet sealing is **Friday, 18th September**.`
   }
@@ -71,9 +76,9 @@ Parent SMS absence notifications were automatically dispatched at 08:30 AM.`
   }
 
   // Generic contextual fallback
-  return `Thank you for your query. I have analyzed Crown Academy Lagos's database:
+  return `Thank you for your query. I have analyzed ${schoolName}'s database:
 
-Currently, the school has **1,280 enrolled learners** across 10 arms, **48 active educators**, an institutional fee collection rate of **84.6%**, and overall attendance averaging **94.2%**.
+Currently, the school has active classes, licensed staff, continuous assessments, and an institutional fee collection rate above 84%.
 
 If you need specific student biodata, broadsheet breakdowns, or fee reconciliation summaries, please let me know!`
 }

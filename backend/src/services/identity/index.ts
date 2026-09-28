@@ -14,6 +14,7 @@ import { cors } from "hono/cors";
 import { clerkAuthMiddleware } from "./middleware";
 import { webhookRoutes } from "./routes/webhooks";
 import { staffRoutes } from "./routes/staff";
+import { schoolRoutes } from "./routes/school";
 import { firebaseTokenRoutes } from "./routes/firebase-token";
 import { assignmentsRoutes } from "./routes/assignments";
 import { licenseMiddleware } from "../licensing/middleware";
@@ -55,6 +56,7 @@ app.use("/assignments/*", clerkAuthMiddleware);
 app.use("/assignments", clerkAuthMiddleware);
 
 // 5. Mount Protected Microservice Routes
+app.route("/school", schoolRoutes);
 app.route("/staff", staffRoutes);
 app.route("/firebase-token", firebaseTokenRoutes);
 app.route("/assignments", assignmentsRoutes);

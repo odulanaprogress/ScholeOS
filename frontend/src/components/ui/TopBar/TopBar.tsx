@@ -15,6 +15,8 @@ import { useUser, useClerk } from '@clerk/clerk-react'
 import { cn } from '@/utils/cn'
 import { ServerStatusBadge } from '@/components/ui/ServerStatusBadge'
 
+import { useSchool } from '@/context/SchoolContext'
+
 export interface TopBarProps {
   isSidebarCollapsed?: boolean
   onOpenMobileSidebar?: () => void
@@ -32,7 +34,7 @@ export interface TopBarProps {
 export const TopBar: React.FC<TopBarProps> = ({
   isSidebarCollapsed = false,
   onOpenMobileSidebar,
-  adminName = 'Alhaji Dr. S. Bello',
+  adminName = 'Dr. Funmilayo Adeleke',
   adminRole = 'Principal / Administrator',
   adminAvatarUrl,
   searchPlaceholder = 'Search students, staff, classes...',
@@ -44,9 +46,10 @@ export const TopBar: React.FC<TopBarProps> = ({
 }) => {
   const { isSignedIn, user } = useUser()
   const { signOut } = useClerk()
+  const { school } = useSchool()
 
   const effectiveName = (isSignedIn && user?.fullName) ? user.fullName : adminName
-  const effectiveEmail = (isSignedIn && user?.primaryEmailAddress?.emailAddress) ? user.primaryEmailAddress.emailAddress : 'admin@crownacademy.ng'
+  const effectiveEmail = (isSignedIn && user?.primaryEmailAddress?.emailAddress) ? user.primaryEmailAddress.emailAddress : `admin@${school.domain || 'apexcollege.ng'}`
   const effectiveAvatar = (isSignedIn && user?.imageUrl) ? user.imageUrl : adminAvatarUrl
   const effectiveRole = (isSignedIn && (user?.publicMetadata as any)?.role) ? String((user?.publicMetadata as any)?.role) : adminRole
 

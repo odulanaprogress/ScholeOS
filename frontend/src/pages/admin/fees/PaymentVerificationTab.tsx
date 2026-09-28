@@ -26,6 +26,7 @@ import {
   Check,
 } from 'lucide-react'
 import { type PaymentVerification } from './feesData'
+import { useSchool } from '@/context/SchoolContext'
 
 interface PaymentVerificationTabProps {
   verifications: PaymentVerification[]
@@ -38,6 +39,7 @@ export const PaymentVerificationTab: React.FC<PaymentVerificationTabProps> = ({
   onApprove,
   onReject,
 }) => {
+  const { school } = useSchool()
   // Active Modals state
   const [viewingProof, setViewingProof] = useState<PaymentVerification | null>(null)
   const [approvingItem, setApprovingItem] = useState<PaymentVerification | null>(null)
@@ -312,7 +314,7 @@ export const PaymentVerificationTab: React.FC<PaymentVerificationTabProps> = ({
               <div className="py-3 text-xs space-y-2.5">
                 <div className="flex items-center justify-between">
                   <span className="text-charcoal-muted">Beneficiary:</span>
-                  <span className="font-semibold text-charcoal-dark">Crown Academy Lagos</span>
+                  <span className="font-semibold text-charcoal-dark">{school.name}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-charcoal-muted">Beneficiary Bank:</span>

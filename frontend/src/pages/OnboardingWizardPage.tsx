@@ -23,7 +23,7 @@ import {
   Calculator,
   Sliders,
 } from 'lucide-react'
-import { provisionSchoolLicense } from '@/lib/api'
+import { useSchool } from '@/context/SchoolContext'
 
 export interface OnboardingWizardPageProps {
   onNavigateToHome: () => void
@@ -51,6 +51,7 @@ export const OnboardingWizardPage: React.FC<OnboardingWizardPageProps> = ({
   onNavigateToLogin,
   onNavigateToDashboard,
 }) => {
+  const { school, onboardSchool } = useSchool()
   const [currentStep, setCurrentStep] = useState(1)
   const [createdSuccess, setCreatedSuccess] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
@@ -58,14 +59,19 @@ export const OnboardingWizardPage: React.FC<OnboardingWizardPageProps> = ({
   const handleCreateSchool = async () => {
     setIsCreating(true)
     try {
-      await provisionSchoolLicense({
+      await onboardSchool({
         schoolName: schoolName.trim(),
+        schoolAbbr: schoolAbbr.trim(),
+        schoolAddress: schoolAddress.trim(),
+        studentRange,
+        accentColor,
+        classes,
+        subjects,
+        scoreComponents,
         plan: 'standard',
-        contactEmail: `principal@${schoolAbbr.toLowerCase().replace(/[^a-z0-9]/g, '') || 'school'}.edu.ng`,
-        studentCount: studentRange === '500+' ? 600 : studentRange === '200-500' ? 350 : 150,
       })
     } catch (err) {
-      console.warn('[Onboarding] Real-time license provision fallback:', err)
+      console.warn('[Onboarding] Real-time school provision fallback:', err)
     } finally {
       setIsCreating(false)
       setCreatedSuccess(true)
@@ -73,9 +79,9 @@ export const OnboardingWizardPage: React.FC<OnboardingWizardPageProps> = ({
   }
 
   // Step 1: School Details
-  const [schoolName, setSchoolName] = useState('Kings Comprehensive College')
-  const [schoolAbbr, setSchoolAbbr] = useState('KCC')
-  const [schoolAddress, setSchoolAddress] = useState('12 Commercial Avenue, Yaba, Lagos')
+  const [schoolName, setSchoolName] = useState(school?.name || '')
+  const [schoolAbbr, setSchoolAbbr] = useState(school?.shortName || '')
+  const [schoolAddress, setSchoolAddress] = useState(school?.address || '')
   const [studentRange, setStudentRange] = useState('200-500')
 
   // Step 2: Branding

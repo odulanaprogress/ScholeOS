@@ -27,7 +27,7 @@ const STUDENT_SUGGESTED_PROMPTS = [
 ]
 
 export const StudentAiPage: React.FC<StudentAiPageProps> = ({
-  studentName = 'Fatima Bello',
+  studentName = 'Somtochukwu Okafor',
   classNameTitle = 'JSS 2A',
 }) => {
   const [selectedSubject, setSelectedSubject] = useState<string>('Mathematics')

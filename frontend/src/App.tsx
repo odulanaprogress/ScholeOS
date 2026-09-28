@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useUser } from '@clerk/clerk-react'
+import { useSchool } from '@/context/SchoolContext'
 import { LandingPage } from '@/pages/LandingPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { OnboardingWizardPage } from '@/pages/OnboardingWizardPage'
@@ -297,6 +299,19 @@ const INITIAL_TEACHER_ASSIGNMENTS: TeacherAssignment[] = [
 ]
 
 function App() {
+  const { isSignedIn, user } = useUser()
+  const { school } = useSchool()
+
+  const clerkName = (isSignedIn && user?.fullName)
+    ? user.fullName
+    : (user?.primaryEmailAddress?.emailAddress ? user.primaryEmailAddress.emailAddress.split('@')[0] : '')
+
+  const adminDisplayName = clerkName || 'Dr. Funmilayo Adeleke'
+  const teacherDisplayName = clerkName || 'Mr. Babatunde Adeyemi'
+  const classTeacherDisplayName = clerkName || 'Mr. Babatunde Adeyemi'
+  const parentDisplayName = clerkName || 'Mr. S. Okafor'
+  const studentDisplayName = clerkName || 'Somtochukwu Okafor'
+
   const [currentView, setCurrentView] = useState<AppView>('landing')
   const [activeAdminNavId, setActiveAdminNavId] = useState<string>('overview')
   const [activeTeacherNavId, setActiveTeacherNavId] = useState<string>('overview')
@@ -381,8 +396,8 @@ function App() {
     const newSub: StudentCbtSubmission = {
       id: serverSubmissionId || `sub-${Date.now()}`,
       testId: currentTest.id,
-      studentName: 'Fatima Bello',
-      admissionNo: 'JSS2/003',
+      studentName: studentDisplayName,
+      admissionNo: 'APX/2025/001',
       score: earnedPoints,
       totalPoints,
       timeTakenMinutes,
@@ -1135,7 +1150,9 @@ function App() {
           activeNavId="overview"
           onNavigate={handleAdminNavigate}
           pageTitle="School Overview"
-          pageSubtitle="Welcome back, Alhaji Dr. S. Bello • Crown Academy Lagos • 2nd Term 2025/2026"
+          pageSubtitle={`Welcome back, ${adminDisplayName} • ${school.name} • ${school.currentTerm}`}
+          userName={adminDisplayName}
+          schoolName={school.name}
           headerAction={
             <Button
               variant="primary"
@@ -1431,11 +1448,12 @@ function App() {
           navItems={TEACHER_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Subject Teacher"
-          userName="Mrs. Bola Adeyemi"
-          userRole="Mathematics & Physics Faculty"
+          userName={teacherDisplayName}
+          userRole="Faculty Member"
           mobileNavTabs={TEACHER_MOBILE_TABS}
           pageTitle="Teacher Dashboard"
-          pageSubtitle="Welcome back, Mrs. Adeyemi • Term 2 Score Submissions & Assignments"
+          pageSubtitle={`Welcome back, ${teacherDisplayName} • ${school.currentTerm} Score Submissions`}
+          schoolName={school.name}
           headerAction={
             <Button
               variant="primary"
@@ -1471,14 +1489,15 @@ function App() {
           navItems={TEACHER_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Subject Teacher"
-          userName="Mrs. Bola Adeyemi"
-          userRole="Mathematics & Physics Faculty"
+          userName={teacherDisplayName}
+          userRole="Faculty Member"
           mobileNavTabs={TEACHER_MOBILE_TABS}
           pageTitle="Continuous Assessment & Exam Scores"
           pageSubtitle="Enter test marks, laboratory scores, and term exam results for your assigned classes."
+          schoolName={school.name}
           headerAction={
             <Badge variant="primary" size="sm">
-              Term 2 • 2025/2026
+              {school.currentTerm}
             </Badge>
           }
           onLogout={() => setCurrentView('login')}
@@ -1495,11 +1514,12 @@ function App() {
           navItems={TEACHER_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Subject Teacher"
-          userName="Mrs. Bola Adeyemi"
-          userRole="Mathematics & Physics Faculty"
+          userName={teacherDisplayName}
+          userRole="Faculty Member"
           mobileNavTabs={TEACHER_MOBILE_TABS}
           pageTitle="Coursework & Assignments"
           pageSubtitle="Create assignments, attach worksheets, and track student submissions."
+          schoolName={school.name}
           headerAction={
             <Button
               variant="primary"
@@ -1527,23 +1547,24 @@ function App() {
           navItems={TEACHER_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Subject Teacher"
-          userName="Mrs. Bola Adeyemi"
-          userRole="Mathematics & Physics Faculty"
+          userName={teacherDisplayName}
+          userRole="Faculty Member"
           mobileNavTabs={TEACHER_MOBILE_TABS}
           pageTitle="Staff Notices & Announcements"
           pageSubtitle="Institutional updates from the Principal's Office and Academic Board."
+          schoolName={school.name}
           onLogout={() => setCurrentView('login')}
         >
           <Card className="p-6 space-y-4 max-w-3xl">
             <div className="p-4 rounded-xl bg-indigo-50/70 border border-indigo-200">
               <div className="flex items-center justify-between pb-2 mb-2 border-b border-indigo-200/60">
                 <span className="font-bold text-sm text-indigo-950">
-                  Term 2 Score Upload Deadline Reminder
+                  Score Upload Deadline Reminder
                 </span>
                 <span className="text-[11px] text-indigo-700 font-semibold">2 hours ago</span>
               </div>
               <p className="text-xs sm:text-sm text-indigo-900 leading-relaxed">
-                Dear Subject Teachers, please ensure all continuous assessments and exam scores for JSS 1–3 and SSS 1–3 are finalized and submitted for review by Friday, September 11, 2026, ahead of the Form Masters' broadsheet compilation meeting.
+                Dear Subject Teachers, please ensure all continuous assessments and exam scores for JSS 1–3 and SSS 1–3 are finalized and submitted for review by Friday ahead of the Form Masters' broadsheet compilation meeting.
               </p>
             </div>
 
@@ -1570,11 +1591,12 @@ function App() {
           navItems={TEACHER_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Subject Teacher"
-          userName="Mrs. Bola Adeyemi"
-          userRole="Mathematics & Physics Faculty"
+          userName={teacherDisplayName}
+          userRole="Faculty Member"
           mobileNavTabs={TEACHER_MOBILE_TABS}
           pageTitle="Computer-Based Testing (CBT) Assessments"
           pageSubtitle="Create, schedule, and grade timed computer-based tests and continuous assessments."
+          schoolName={school.name}
           onLogout={() => setCurrentView('login')}
         >
           <TeacherCbtListPage
@@ -1604,11 +1626,12 @@ function App() {
           navItems={TEACHER_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Subject Teacher"
-          userName="Mrs. Bola Adeyemi"
-          userRole="Mathematics & Physics Faculty"
+          userName={teacherDisplayName}
+          userRole="Faculty Member"
           mobileNavTabs={TEACHER_MOBILE_TABS}
           pageTitle={editingCbtTest ? 'Edit CBT Assessment' : 'New CBT Assessment Paper'}
           pageSubtitle="Configure test timing, upload questions with optional diagrams, and set correct answer keys."
+          schoolName={school.name}
           onLogout={() => setCurrentView('login')}
         >
           <TeacherCbtBuilderPage
@@ -1627,11 +1650,12 @@ function App() {
           navItems={TEACHER_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Subject Teacher"
-          userName="Mrs. Bola Adeyemi"
-          userRole="Mathematics & Physics Faculty"
+          userName={teacherDisplayName}
+          userRole="Faculty Member"
           mobileNavTabs={TEACHER_MOBILE_TABS}
           pageTitle="CBT Assessment Results & Analytics"
           pageSubtitle="Review student candidate performance, score distribution, and question completion rates."
+          schoolName={school.name}
           onLogout={() => setCurrentView('login')}
         >
           <TeacherCbtResultsPage
@@ -1650,11 +1674,12 @@ function App() {
           navItems={CLASS_TEACHER_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Class Teacher • JSS 2A"
-          userName="Mrs. Bola Adeyemi"
-          userRole="Form Master & Mathematics"
+          userName={classTeacherDisplayName}
+          userRole="Form Master"
           mobileNavTabs={CLASS_TEACHER_MOBILE_TABS}
           pageTitle="Class Teacher Dashboard"
-          pageSubtitle="Class JSS 2A (38 Students) • Term 2 2025/2026 Academic Session"
+          pageSubtitle={`Class JSS 2A • ${school.currentTerm} Academic Session`}
+          schoolName={school.name}
           headerAction={
             <Button
               variant="primary"
@@ -1688,14 +1713,15 @@ function App() {
           navItems={CLASS_TEACHER_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Class Teacher • JSS 2A"
-          userName="Mrs. Bola Adeyemi"
-          userRole="Form Master & Mathematics"
+          userName={classTeacherDisplayName}
+          userRole="Form Master"
           mobileNavTabs={CLASS_TEACHER_MOBILE_TABS}
-          pageTitle="Mathematics — Continuous Assessment & Exam"
-          pageSubtitle="Your assigned subject for JSS 2A • 1st CA (20), 2nd CA (20), Exam (60)"
+          pageTitle="Class Score Entry & Assessment"
+          pageSubtitle={`Score management for JSS 2A • ${school.currentTerm}`}
+          schoolName={school.name}
           headerAction={
             <Badge variant="primary" size="sm">
-              Term 2 • 2025/2026
+              {school.currentTerm}
             </Badge>
           }
           onLogout={() => setCurrentView('login')}
@@ -1712,11 +1738,12 @@ function App() {
           navItems={CLASS_TEACHER_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Class Teacher • JSS 2A"
-          userName="Mrs. Bola Adeyemi"
-          userRole="Form Master & Mathematics"
+          userName={classTeacherDisplayName}
+          userRole="Form Master"
           mobileNavTabs={CLASS_TEACHER_MOBILE_TABS}
           pageTitle="Daily Attendance Register"
-          pageSubtitle="Morning attendance roll call for JSS 2A • Term 2 2025/2026"
+          pageSubtitle={`Morning attendance roll call for JSS 2A • ${school.currentTerm}`}
+          schoolName={school.name}
           headerAction={
             <Button
               variant="secondary"
@@ -1740,11 +1767,12 @@ function App() {
           navItems={CLASS_TEACHER_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Class Teacher • JSS 2A"
-          userName="Mrs. Bola Adeyemi"
-          userRole="Form Master & Mathematics"
+          userName={classTeacherDisplayName}
+          userRole="Form Master"
           mobileNavTabs={CLASS_TEACHER_MOBILE_TABS}
           pageTitle="Subject Score Submission Tracker"
-          pageSubtitle="Real-time monitor of subject submissions across all 8 curriculum subjects for JSS 2A"
+          pageSubtitle="Real-time monitor of subject submissions across all curriculum subjects for JSS 2A"
+          schoolName={school.name}
           headerAction={
             <Button
               variant="primary"
@@ -1772,14 +1800,15 @@ function App() {
           navItems={CLASS_TEACHER_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Class Teacher • JSS 2A"
-          userName="Mrs. Bola Adeyemi"
-          userRole="Form Master & Mathematics"
+          userName={classTeacherDisplayName}
+          userRole="Form Master"
           mobileNavTabs={CLASS_TEACHER_MOBILE_TABS}
           pageTitle="Master Broadsheet & Report Cards"
-          pageSubtitle="Official term-end broadsheet for JSS 2A • 8 Subjects • Weighted Averages & Student Positions"
+          pageSubtitle={`Official term-end broadsheet for JSS 2A • ${school.currentTerm}`}
+          schoolName={school.name}
           headerAction={
             <Badge variant="primary" size="sm">
-              Term 2 • 2025/2026
+              {school.currentTerm}
             </Badge>
           }
           onLogout={() => setCurrentView('login')}
@@ -1799,11 +1828,12 @@ function App() {
           navItems={CLASS_TEACHER_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Class Teacher • JSS 2A"
-          userName="Mrs. Bola Adeyemi"
-          userRole="Form Master & Mathematics"
+          userName={classTeacherDisplayName}
+          userRole="Form Master"
           mobileNavTabs={CLASS_TEACHER_MOBILE_TABS}
           pageTitle="Class Notices & Broadcasts"
           pageSubtitle="Communications and announcements for Form Masters & Class Teachers."
+          schoolName={school.name}
           onLogout={() => setCurrentView('login')}
         >
           <Card className="p-6 space-y-4 max-w-3xl">
@@ -1845,11 +1875,12 @@ function App() {
           navItems={PARENT_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Parent Portal"
-          userName="Alhaji Dr. S. Bello"
+          userName={parentDisplayName}
           userRole="Parent • 2 Enrolled Children"
           mobileNavTabs={PARENT_MOBILE_TABS}
           pageTitle="Parent Dashboard"
-          pageSubtitle="Crown Academy Lagos • Student academic records, fee invoicing, and attendance portal"
+          pageSubtitle={`${school.name} • Student academic records, fee invoicing, and attendance portal`}
+          schoolName={school.name}
           headerAction={
             <Button
               variant="primary"
@@ -1882,11 +1913,12 @@ function App() {
           navItems={PARENT_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Parent Portal"
-          userName="Alhaji Dr. S. Bello"
+          userName={parentDisplayName}
           userRole="Parent • 2 Enrolled Children"
           mobileNavTabs={PARENT_MOBILE_TABS}
           pageTitle="Student Attendance History"
           pageSubtitle="Daily roll call registers, arrival timestamps, and excused absences"
+          schoolName={school.name}
           headerAction={
             <Button
               variant="secondary"
@@ -1915,11 +1947,12 @@ function App() {
           navItems={PARENT_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Parent Portal"
-          userName="Alhaji Dr. S. Bello"
+          userName={parentDisplayName}
           userRole="Parent • 2 Enrolled Children"
           mobileNavTabs={PARENT_MOBILE_TABS}
           pageTitle="Terminal Results & Report Cards"
           pageSubtitle="Official broadsheets, continuous assessment breakdown, and principal certification"
+          schoolName={school.name}
           headerAction={
             <Button
               variant="secondary"
@@ -1949,14 +1982,15 @@ function App() {
           navItems={PARENT_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Parent Portal"
-          userName="Alhaji Dr. S. Bello"
+          userName={parentDisplayName}
           userRole="Parent • 2 Enrolled Children"
           mobileNavTabs={PARENT_MOBILE_TABS}
           pageTitle="School Fees & Invoices"
           pageSubtitle="Term fees billing, online card payments, and bank transfer receipt upload verification"
+          schoolName={school.name}
           headerAction={
             <Badge variant="primary" size="sm">
-              Term 2 • 2025/2026
+              {school.currentTerm}
             </Badge>
           }
           onLogout={() => setCurrentView('login')}
@@ -1977,11 +2011,12 @@ function App() {
           navItems={PARENT_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Parent Portal"
-          userName="Alhaji Dr. S. Bello"
+          userName={parentDisplayName}
           userRole="Parent • 2 Enrolled Children"
           mobileNavTabs={PARENT_MOBILE_TABS}
           pageTitle="School Notices & Announcements"
           pageSubtitle="PTA circulars, calendar notifications, and official directives"
+          schoolName={school.name}
           onLogout={() => setCurrentView('login')}
         >
           <div className="space-y-4 max-w-3xl">
@@ -2009,11 +2044,12 @@ function App() {
           navItems={PARENT_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Parent Portal"
-          userName="Alhaji Dr. S. Bello"
+          userName={parentDisplayName}
           userRole="Parent • 2 Enrolled Children"
           mobileNavTabs={PARENT_MOBILE_TABS}
           pageTitle="ScholeOS Parent AI Assistant"
           pageSubtitle="Interactive school query copilot scheduled for Wave 9"
+          schoolName={school.name}
           onLogout={() => setCurrentView('login')}
         >
           <AiComingSoonPage
@@ -2037,11 +2073,12 @@ function App() {
           navItems={STUDENT_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Student • JSS 2A"
-          userName="Fatima Bello"
+          userName={studentDisplayName}
           userRole="Student • Class JSS 2A (Adm: JSS2/003)"
           mobileNavTabs={STUDENT_MOBILE_TABS}
           pageTitle="Student Dashboard"
-          pageSubtitle="Welcome back, Fatima • Term 2 2025/2026 Academic Session"
+          pageSubtitle={`Welcome back, ${studentDisplayName} • ${school.currentTerm}`}
+          schoolName={school.name}
           headerAction={
             <Button
               variant="primary"
@@ -2055,7 +2092,7 @@ function App() {
           onLogout={() => setCurrentView('login')}
         >
           <StudentOverviewPage
-            studentName="Fatima Bello"
+            studentName={studentDisplayName}
             classNameTitle="JSS 2A"
             admissionNumber="JSS2/003"
             onNavigateToResults={() => handleStudentNavigate('results')}
@@ -2074,14 +2111,15 @@ function App() {
           navItems={STUDENT_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Student • JSS 2A"
-          userName="Fatima Bello"
+          userName={studentDisplayName}
           userRole="Student • Class JSS 2A (Adm: JSS2/003)"
           mobileNavTabs={STUDENT_MOBILE_TABS}
           pageTitle="My Academic Results"
           pageSubtitle="Terminal report cards and WAEC standard grade records"
+          schoolName={school.name}
           headerAction={
             <Badge variant="primary" size="sm">
-              Term 2 • 2025/2026
+              {school.currentTerm}
             </Badge>
           }
           onLogout={() => setCurrentView('login')}
@@ -2089,7 +2127,7 @@ function App() {
           <ParentResultsPage
             selectedChildId="child-1"
             showChildSwitcher={false}
-            studentName="Fatima Bello"
+            studentName={studentDisplayName}
             classNameTitle="JSS 2A"
             admissionNumber="JSS2/003"
           />
@@ -2104,11 +2142,12 @@ function App() {
           navItems={STUDENT_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Student • JSS 2A"
-          userName="Fatima Bello"
+          userName={studentDisplayName}
           userRole="Student • Class JSS 2A (Adm: JSS2/003)"
           mobileNavTabs={STUDENT_MOBILE_TABS}
           pageTitle="My Class Attendance"
           pageSubtitle="Daily morning attendance roll record for JSS 2A"
+          schoolName={school.name}
           headerAction={
             <Button
               variant="secondary"
@@ -2123,7 +2162,7 @@ function App() {
           <ParentAttendancePage
             selectedChildId="child-1"
             showChildSwitcher={false}
-            studentName="Fatima Bello"
+            studentName={studentDisplayName}
             classNameTitle="JSS 2A"
           />
         </DashboardLayout>
@@ -2137,14 +2176,15 @@ function App() {
           navItems={STUDENT_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Student • JSS 2A"
-          userName="Fatima Bello"
+          userName={studentDisplayName}
           userRole="Student • Class JSS 2A (Adm: JSS2/003)"
           mobileNavTabs={STUDENT_MOBILE_TABS}
           pageTitle="Coursework & Assignments"
           pageSubtitle="Download teacher resources, submit homework solutions, and view graded scores"
+          schoolName={school.name}
           headerAction={
             <Badge variant="primary" size="sm">
-              Term 2
+              {school.currentTerm}
             </Badge>
           }
           onLogout={() => setCurrentView('login')}
@@ -2161,11 +2201,12 @@ function App() {
           navItems={STUDENT_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Student • JSS 2A"
-          userName="Fatima Bello"
+          userName={studentDisplayName}
           userRole="Student • Class JSS 2A (Adm: JSS2/003)"
           mobileNavTabs={STUDENT_MOBILE_TABS}
           pageTitle="Weekly Class Timetable"
           pageSubtitle="Monday through Friday periods, teacher allocations, and lab rooms for JSS 2A"
+          schoolName={school.name}
           headerAction={
             <Badge variant="primary" size="sm">
               JSS 2A Schedule
@@ -2185,11 +2226,12 @@ function App() {
           navItems={STUDENT_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Student • JSS 2A"
-          userName="Fatima Bello"
+          userName={studentDisplayName}
           userRole="Student • Class JSS 2A (Adm: JSS2/003)"
           mobileNavTabs={STUDENT_MOBILE_TABS}
           pageTitle="ScholeOS AI Tutor"
           pageSubtitle="Your 24/7 personal learning guide for homework concepts and revision practice"
+          schoolName={school.name}
           headerAction={
             <Button
               variant="secondary"
@@ -2201,7 +2243,7 @@ function App() {
           }
           onLogout={() => setCurrentView('login')}
         >
-          <StudentAiPage studentName="Fatima Bello" classNameTitle="JSS 2A" />
+          <StudentAiPage studentName={studentDisplayName} classNameTitle="JSS 2A" />
         </DashboardLayout>
       )}
 
@@ -2217,11 +2259,12 @@ function App() {
           navItems={STUDENT_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Student • JSS 2A"
-          userName="Fatima Bello"
+          userName={studentDisplayName}
           userRole="Student • Class JSS 2A (Adm: JSS2/003)"
           mobileNavTabs={STUDENT_MOBILE_TABS}
           pageTitle="Computer-Based Testing (CBT) Portal"
           pageSubtitle="Take timed school assessments, practice mock exams, and view graded result sheets."
+          schoolName={school.name}
           onLogout={() => setCurrentView('login')}
         >
           <StudentCbtListPage
@@ -2244,7 +2287,7 @@ function App() {
       {currentView === 'student-cbt-exam' && (
         <StudentCbtExamView
           test={activeExamTest || cbtTests[0]}
-          studentName="Fatima Bello"
+          studentName={studentDisplayName}
           admissionNo="JSS2/003"
           onSubmit={handleStudentExamSubmit}
           onExit={() => setCurrentView('student-cbt-list')}
@@ -2259,11 +2302,21 @@ function App() {
           navItems={STUDENT_NAV_ITEMS}
           showTrialPill={false}
           roleBadge="Student • JSS 2A"
-          userName="Fatima Bello"
+          userName={studentDisplayName}
           userRole="Student • Class JSS 2A (Adm: JSS2/003)"
           mobileNavTabs={STUDENT_MOBILE_TABS}
-          pageTitle="Examination Results & Script Review"
-          pageSubtitle="Official student performance score sheet and question-by-question analysis."
+          pageTitle="CBT Exam Result Sheet"
+          pageSubtitle="Official computer graded scorecard with WAEC percentage and answer breakdown"
+          schoolName={school.name}
+          headerAction={
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setCurrentView('student-cbt-list')}
+            >
+              ← Back to Test Directory
+            </Button>
+          }
           onLogout={() => setCurrentView('login')}
         >
           <StudentCbtResultsPage

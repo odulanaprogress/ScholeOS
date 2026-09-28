@@ -14,6 +14,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { ChildSwitcher } from './ChildSwitcher'
+import { useSchool } from '@/context/SchoolContext'
 import type { ChildProfile, SchoolAnnouncement } from './parentData'
 
 export interface ParentOverviewPageProps {
@@ -35,6 +36,7 @@ export const ParentOverviewPage: React.FC<ParentOverviewPageProps> = ({
   onNavigateToResults,
   onNavigateToFees,
 }) => {
+  const { school } = useSchool()
   const activeChild = childrenList.find((c) => c.id === selectedChildId) || childrenList[0]
 
   const hasOutstandingFees = activeChild.feeSummary.balanceRemaining > 0
@@ -118,7 +120,7 @@ export const ParentOverviewPage: React.FC<ParentOverviewPageProps> = ({
                   {activeChild.fullName}'s Academic Dashboard
                 </h3>
                 <p className="text-xs sm:text-sm text-charcoal-muted max-w-lg leading-relaxed">
-                  Terminal assessments, continuous attendance records, fee statements, and teacher remarks for Crown Academy Lagos.
+                  Terminal assessments, continuous attendance records, fee statements, and teacher remarks for {school.name}.
                 </p>
               </div>
 

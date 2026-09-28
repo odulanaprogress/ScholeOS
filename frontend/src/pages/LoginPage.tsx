@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { SignIn, useUser, useClerk } from '@clerk/clerk-react'
 import { scholeosClerkAppearance } from '@/lib/clerk'
+import { useSchool } from '@/context/SchoolContext'
 
 export interface LoginPageProps {
   onNavigateToOnboarding: () => void
@@ -34,6 +35,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   onNavigateToHome,
   onLoginSuccess,
 }) => {
+  const { school } = useSchool()
   const { isSignedIn, user, isLoaded } = useUser()
   const { signOut } = useClerk()
 
@@ -174,7 +176,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               </div>
               <div className="flex justify-between text-[11px]">
                 <span className="text-slate-400 font-sans">Tenant Scope:</span>
-                <span className="text-emerald-700 font-semibold font-sans">Crown Academy Lagos</span>
+                <span className="text-emerald-700 font-semibold font-sans">{school.name || 'Apex International College'}</span>
               </div>
             </div>
 
@@ -279,7 +281,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                       <div className="grid grid-cols-2 gap-1.5">
                         <button
                           type="button"
-                          onClick={() => handleQuickPersona('admin', 'principal@crownacademy.ng')}
+                          onClick={() => handleQuickPersona('admin', `principal@${school.domain || 'apexcollege.ng'}`)}
                           className="px-2.5 py-2 rounded-xl text-left bg-cream-base/60 hover:bg-cream-base border border-cream-border text-xs font-semibold text-charcoal-dark flex items-center gap-2 transition-colors"
                         >
                           <ShieldCheck className="w-3.5 h-3.5 text-indigo-brand shrink-0" />
@@ -287,7 +289,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleQuickPersona('teacher', 'adeyemi@crownacademy.ng')}
+                          onClick={() => handleQuickPersona('teacher', `adeyemi@${school.domain || 'apexcollege.ng'}`)}
                           className="px-2.5 py-2 rounded-xl text-left bg-cream-base/60 hover:bg-cream-base border border-cream-border text-xs font-semibold text-charcoal-dark flex items-center gap-2 transition-colors"
                         >
                           <UserCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
@@ -295,7 +297,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleQuickPersona('class-teacher', 'babatunde@crownacademy.ng')}
+                          onClick={() => handleQuickPersona('class-teacher', `babatunde@${school.domain || 'apexcollege.ng'}`)}
                           className="px-2.5 py-2 rounded-xl text-left bg-cream-base/60 hover:bg-cream-base border border-cream-border text-xs font-semibold text-charcoal-dark flex items-center gap-2 transition-colors"
                         >
                           <UserCheck className="w-3.5 h-3.5 text-amber-600 shrink-0" />
@@ -324,7 +326,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                       <Input
                         label="Email Address"
                         type="email"
-                        placeholder="user@crownacademy.ng"
+                        placeholder={`user@${school.domain || 'apexcollege.ng'}`}
                         icon={<Mail className="w-4 h-4" />}
                         value={email}
                         onChange={(e) => {

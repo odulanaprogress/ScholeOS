@@ -19,6 +19,7 @@ import {
   type TermResultRecord,
   CHILD_RESULTS_RECORDS,
 } from './parentData'
+import { useSchool } from '@/context/SchoolContext'
 
 export interface ParentResultsPageProps {
   childrenList?: ChildProfile[]
@@ -28,6 +29,8 @@ export interface ParentResultsPageProps {
   studentName?: string
   classNameTitle?: string
   admissionNumber?: string
+  principalName?: string
+  classTeacherName?: string
 }
 
 export const ParentResultsPage: React.FC<ParentResultsPageProps> = ({
@@ -38,11 +41,16 @@ export const ParentResultsPage: React.FC<ParentResultsPageProps> = ({
   studentName,
   classNameTitle,
   admissionNumber,
+  principalName,
+  classTeacherName,
 }) => {
+  const { school } = useSchool()
   const activeChild = childrenList.find((c) => c.id === selectedChildId)
   const displayName = studentName || activeChild?.fullName || 'Student'
   const displayClass = classNameTitle || activeChild?.className || 'JSS 2A'
   const displayAdm = admissionNumber || activeChild?.admissionNo || 'JSS2/003'
+  const effectivePrincipal = principalName || 'Dr. Funmilayo Adeleke'
+  const effectiveClassTeacher = classTeacherName || 'Mr. Babatunde Adeyemi'
 
   const termResults: TermResultRecord[] =
     CHILD_RESULTS_RECORDS[selectedChildId] || CHILD_RESULTS_RECORDS['child-1'] || []
@@ -210,7 +218,7 @@ export const ParentResultsPage: React.FC<ParentResultsPageProps> = ({
             ? `${displayName} — ${selectedTermResult.termName} Official Report Card`
             : 'Report Card'
         }
-        description={`Crown Academy Lagos • ${displayClass} • ${selectedTermResult?.session || '2025/2026'}`}
+        description={`${school.name} • ${displayClass} • ${selectedTermResult?.session || '2025/2026'}`}
         size="xl"
       >
         {selectedTermResult && (
@@ -328,7 +336,7 @@ export const ParentResultsPage: React.FC<ParentResultsPageProps> = ({
                   "{selectedTermResult.teacherComment || 'Commendable academic effort throughout this session.'}"
                 </p>
                 <span className="text-[10px] text-charcoal-muted block pt-1">
-                  — Mrs. Bola Adeyemi (Class Teacher)
+                  — {effectiveClassTeacher} (Class Teacher)
                 </span>
               </div>
 
@@ -341,7 +349,7 @@ export const ParentResultsPage: React.FC<ParentResultsPageProps> = ({
                   "{selectedTermResult.principalRemark || 'Promoted with honors to the next class level.'}"
                 </p>
                 <span className="text-[10px] text-indigo-700 block pt-1">
-                  — Alhaji Dr. S. Bello (Principal)
+                  — {effectivePrincipal} (Principal)
                 </span>
               </div>
             </div>
@@ -349,7 +357,7 @@ export const ParentResultsPage: React.FC<ParentResultsPageProps> = ({
             {/* Modal Actions Footer */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-cream-border">
               <span className="text-[11px] text-charcoal-muted">
-                Official document certified by Crown Academy Lagos examination committee.
+                Official document certified by {school.name} examination committee.
               </span>
 
               <div className="flex items-center gap-2 w-full sm:w-auto">

@@ -40,11 +40,11 @@ export interface PlatformBillingRecord {
 export const INITIAL_LICENSED_SCHOOLS: LicensedSchool[] = [
   {
     id: 'sch-001',
-    name: 'Crown Academy Lagos',
-    shortName: 'CAL',
-    contactEmail: 'principal@crownacademy.ng',
+    name: 'Apex International College',
+    shortName: 'Apex College',
+    contactEmail: 'admin@apexcollege.ng',
     contactPhone: '+234 803 241 8899',
-    adminName: 'Dr. Alhaji S. Bello',
+    adminName: 'Dr. Funmilayo Adeleke',
     plan: 'premium',
     status: 'active',
     studentCount: 340,
@@ -258,7 +258,7 @@ export const INITIAL_PLATFORM_BILLING: PlatformBillingRecord[] = [
   {
     id: 'bill-101',
     schoolId: 'sch-001',
-    schoolName: 'Crown Academy Lagos',
+    schoolName: 'Apex International College',
     amount: 65000,
     date: 'Sep 02, 2026',
     plan: 'premium',

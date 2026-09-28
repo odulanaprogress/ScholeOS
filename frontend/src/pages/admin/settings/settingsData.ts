@@ -50,11 +50,11 @@ export const PRESET_COLORS = [
 ]
 
 export const INITIAL_SCHOOL_INFO: SchoolInfoSettings = {
-  schoolName: 'Crown Academy Lagos',
-  schoolAbbr: 'CAL',
-  schoolAddress: 'Plot 12, Commercial Avenue, Yaba, Lagos State',
+  schoolName: 'Apex International College',
+  schoolAbbr: 'Apex College',
+  schoolAddress: '15 Victoria Island Crescent, Lagos State',
   studentRange: '200-500',
-  contactEmail: 'admin@crownacademy.sch.ng',
+  contactEmail: 'admin@apexcollege.ng',
   contactPhone: '+234 (0) 803 123 4567',
 }
 
@@ -131,7 +131,7 @@ export const AVAILABLE_PLANS: SubscriptionPlan[] = [
     features: [
       'Unlimited enrolled students & campuses',
       'All Professional features included',
-      'Custom school subdomain (e.g. portal.crownacademy.sch.ng)',
+      'Custom school subdomain (e.g. portal.yourschool.sch.ng)',
       'Dedicated account manager & priority 24/7 SLA',
       'Unlimited AI assistant queries & CBT assessments',
       'Bulk automated parent SMS & WhatsApp delivery gateway',

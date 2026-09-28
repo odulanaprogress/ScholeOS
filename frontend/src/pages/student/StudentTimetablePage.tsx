@@ -11,6 +11,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { WEEKLY_TIMETABLE_SLOTS } from './studentData'
+import { useSchool } from '@/context/SchoolContext'
 
 export interface StudentTimetablePageProps {
   classNameTitle?: string
@@ -19,6 +20,7 @@ export interface StudentTimetablePageProps {
 export const StudentTimetablePage: React.FC<StudentTimetablePageProps> = ({
   classNameTitle = 'JSS 2A',
 }) => {
+  const { school } = useSchool()
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   const handleDownloadTimetable = () => {
@@ -98,7 +100,7 @@ export const StudentTimetablePage: React.FC<StudentTimetablePageProps> = ({
             Weekly Class Timetable
           </h3>
           <p className="text-xs sm:text-sm text-charcoal-muted">
-            Official class schedule and classroom laboratory allocations for Crown Academy.
+            Official class schedule and classroom laboratory allocations for {school.name}.
           </p>
         </div>
 

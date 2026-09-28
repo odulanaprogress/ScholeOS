@@ -750,3 +750,112 @@ export async function provisionSchoolLicense(data: {
 
   return res;
 }
+
+/* ========================================================================== */
+/* REAL-TIME SCHOOL PROFILE & OVERVIEW METRICS                                */
+/* ========================================================================== */
+
+export interface SchoolProfile {
+  id: string;
+  name: string;
+  shortName: string;
+  address?: string;
+  brandColor?: string;
+  logoUrl?: string;
+  subdomain?: string;
+  domain?: string;
+  currentTerm: string;
+  stats?: {
+    staffCount: number;
+    studentCount: number;
+    classCount: number;
+  };
+}
+
+export interface SchoolOverviewMetrics {
+  school: {
+    id: string;
+    name: string;
+    shortName: string;
+    address?: string;
+    brandColor?: string;
+    logoUrl?: string;
+    currentTerm: string;
+  };
+  stats: {
+    totalStudents: number;
+    activeStaff: number;
+    totalClasses: number;
+    feeArrears: string;
+    completedClassesCount: number;
+    totalClassesCount: number;
+    completionPercent: number;
+    completionRatio: string;
+  };
+  classSubmissions: Array<{
+    id: string;
+    name: string;
+    classTeacher: string;
+    submitted: number;
+    total: number;
+    status: 'complete' | 'in_progress' | 'not_started';
+  }>;
+  staff: Array<{
+    id: string;
+    fullName: string;
+    email: string;
+    role: string;
+  }>;
+}
+
+export async function fetchSchoolProfile(schoolId?: string): Promise<{ school: SchoolProfile }> {
+  const query = schoolId ? `?schoolId=${schoolId}` : '';
+  return apiRequest(`api/identity/school${query}`, { method: 'GET' });
+}
+
+export async function updateSchoolProfile(data: Partial<SchoolProfile>): Promise<{ school: SchoolProfile; message: string }> {
+  return apiRequest('api/identity/school', {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function fetchSchoolOverviewMetrics(schoolId?: string): Promise<SchoolOverviewMetrics> {
+  const query = schoolId ? `?schoolId=${schoolId}` : '';
+  return apiRequest(`api/identity/school/metrics${query}`, { method: 'GET' });
+}
+
+export async function fetchSchoolClasses(schoolId?: string): Promise<{ classes: Array<{ id: string; name: string; studentCount: number; classTeacher: string }> }> {
+  const query = schoolId ? `?schoolId=${schoolId}` : '';
+  return apiRequest(`api/identity/school/classes${query}`, { method: 'GET' });
+}
+
+export async function submitSchoolOnboarding(data: {
+  schoolName: string;
+  schoolAbbr: string;
+  schoolAddress: string;
+  studentRange?: string;
+  accentColor?: string;
+  classes?: string[];
+  subjects?: string[];
+  scoreComponents?: Array<{ id: string; name: string; weight: number }>;
+  plan?: string;
+}): Promise<{ school: SchoolProfile; message: string }> {
+  const start = performance.now();
+  const res = await apiRequest('api/identity/school/onboard', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  const latencyMs = Math.round(performance.now() - start);
+
+  emitBackendActivity({
+    type: 'system',
+    title: 'School Onboarded & Configured',
+    detail: `${data.schoolName} (${data.classes?.length || 0} classes, ${data.subjects?.length || 0} subjects) provisioned in PostgreSQL`,
+    status: 'success',
+    latencyMs,
+  });
+
+  return res;
+}
+

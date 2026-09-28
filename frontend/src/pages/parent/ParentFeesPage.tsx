@@ -23,6 +23,8 @@ import {
   TableCell,
 } from '@/components/ui/Table'
 import { ChildSwitcher } from './ChildSwitcher'
+import { useSchool } from '@/context/SchoolContext'
+import { useUser } from '@clerk/clerk-react'
 import {
   type ChildProfile,
   type FeeInvoiceItem,
@@ -33,14 +35,19 @@ export interface ParentFeesPageProps {
   childrenList: ChildProfile[]
   selectedChildId: string
   onSelectChild: (childId: string) => void
+  parentName?: string
 }
 
 export const ParentFeesPage: React.FC<ParentFeesPageProps> = ({
   childrenList,
   selectedChildId,
   onSelectChild,
+  parentName,
 }) => {
+  const { school } = useSchool()
+  const { user } = useUser()
   const activeChild = childrenList.find((c) => c.id === selectedChildId) || childrenList[0]
+  const cardHolderName = parentName || user?.fullName || 'Parent / Guardian'
 
   // Track invoice items in state to support live status update to "pending_verification"
   const [invoicesMap, setInvoicesMap] = useState<Record<string, FeeInvoiceItem[]>>({
@@ -204,7 +211,7 @@ export const ParentFeesPage: React.FC<ParentFeesPageProps> = ({
           </div>
 
           <span className="text-xs font-mono text-charcoal-muted">
-            Crown Academy Bursary Department
+            {school.name} Bursary Department
           </span>
         </div>
 
@@ -300,7 +307,7 @@ export const ParentFeesPage: React.FC<ParentFeesPageProps> = ({
           }
         }}
         title={selectedInvoice ? `Pay ${selectedInvoice.feeType}` : 'Payment'}
-        description={`Crown Academy Bursary • ${activeChild.fullName} (${activeChild.className}) • Amount: ₦${selectedInvoice?.amount.toLocaleString() || '0'}`}
+        description={`${school.shortName || school.name || 'Apex College'} Bursary • ${activeChild.fullName} (${activeChild.className}) • Amount: ₦${selectedInvoice?.amount.toLocaleString() || '0'}`}
         size="lg"
       >
         {selectedInvoice && (
@@ -361,8 +368,8 @@ export const ParentFeesPage: React.FC<ParentFeesPageProps> = ({
                 <div className="space-y-3">
                   <Input
                     label="Cardholder Full Name"
-                    placeholder="e.g. Alhaji Dr. S. Bello"
-                    defaultValue="Alhaji Dr. S. Bello"
+                    placeholder="e.g. Cardholder Name"
+                    defaultValue={cardHolderName}
                   />
                   <div className="grid grid-cols-2 gap-3">
                     <Input
@@ -413,7 +420,7 @@ export const ParentFeesPage: React.FC<ParentFeesPageProps> = ({
                     </div>
                     <div className="col-span-2">
                       <span className="text-charcoal-muted block">Account Name:</span>
-                      <strong className="text-charcoal-dark">Crown Academy Lagos School Fees</strong>
+                      <strong className="text-charcoal-dark">{school.name} School Fees</strong>
                     </div>
                   </div>
                 </div>

@@ -13,6 +13,8 @@ import { StatCard } from '@/components/ui/StatCard'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { useSchool } from '@/context/SchoolContext'
+import { useUser } from '@clerk/clerk-react'
 
 export interface SubjectSubmissionItem {
   id: string
@@ -23,14 +25,12 @@ export interface SubjectSubmissionItem {
 }
 
 const DEFAULT_OVERVIEW_SUBJECTS: SubjectSubmissionItem[] = [
-  { id: 'sub-1', subject: 'Mathematics', teacherName: 'Mrs. Bola Adeyemi', status: 'draft', lastUpdated: '10 mins ago (You)' },
-  { id: 'sub-2', subject: 'English Language', teacherName: 'Mrs. Fatima Okafor', status: 'submitted', lastUpdated: 'Yesterday at 3:45 PM' },
+  { id: 'sub-1', subject: 'Mathematics', teacherName: 'Mr. Babatunde Adeyemi', status: 'draft', lastUpdated: '10 mins ago (You)' },
+  { id: 'sub-2', subject: 'English Language', teacherName: 'Mrs. Chioma Okonkwo', status: 'submitted', lastUpdated: 'Yesterday at 3:45 PM' },
   { id: 'sub-3', subject: 'Basic Science', teacherName: 'Mr. Tunde Alabi', status: 'submitted', lastUpdated: '2 hours ago' },
-  { id: 'sub-4', subject: 'Social Studies', teacherName: 'Mr. Emmanuel Danladi', status: 'draft', lastUpdated: '3 days ago' },
-  { id: 'sub-5', subject: 'Agricultural Science', teacherName: 'Dr. Kehinde Babatunde', status: 'submitted', lastUpdated: 'Sep 4, 2026' },
+  { id: 'sub-4', subject: 'Economics', teacherName: 'Dr. Funmilayo Adeleke', status: 'draft', lastUpdated: '3 days ago' },
+  { id: 'sub-5', subject: 'Agricultural Science', teacherName: 'Mr. Babatunde Adeyemi', status: 'submitted', lastUpdated: 'Sep 4, 2026' },
   { id: 'sub-6', subject: 'Business Studies', teacherName: 'Mrs. Halima Ibrahim', status: 'submitted', lastUpdated: 'Sep 3, 2026' },
-  { id: 'sub-7', subject: 'Civic Education', teacherName: 'Mr. Babatunde Balogun', status: 'draft', lastUpdated: 'Sep 1, 2026' },
-  { id: 'sub-8', subject: 'French Language', teacherName: 'Madame C. Dupont', status: 'submitted', lastUpdated: 'Sep 5, 2026' },
 ]
 
 export interface ClassTeacherOverviewPageProps {
@@ -39,6 +39,8 @@ export interface ClassTeacherOverviewPageProps {
   attendanceStatus?: 'marked' | 'unmarked'
   presentCount?: number
   subjects?: SubjectSubmissionItem[]
+  teacherName?: string
+  academicTerm?: string
   onNavigateToAttendance?: () => void
   onNavigateToTracker?: () => void
   onNavigateToBroadsheet?: () => void
@@ -46,16 +48,22 @@ export interface ClassTeacherOverviewPageProps {
 }
 
 export const ClassTeacherOverviewPage: React.FC<ClassTeacherOverviewPageProps> = ({
-  className = 'JSS 2A',
+  className = 'JSS 1A',
   totalStudents = 38,
   attendanceStatus = 'marked',
   presentCount = 36,
   subjects = DEFAULT_OVERVIEW_SUBJECTS,
+  teacherName,
+  academicTerm,
   onNavigateToAttendance = () => {},
   onNavigateToTracker = () => {},
   onNavigateToBroadsheet = () => {},
   onNavigateToScores = () => {},
 }) => {
+  const { school } = useSchool()
+  const { user } = useUser()
+  const effectiveTeacher = teacherName || user?.fullName || 'Mr. Babatunde Adeyemi'
+  const effectiveTerm = academicTerm || school.currentTerm || '2025/2026 - First Term'
   const submittedCount = subjects.filter((s) => s.status === 'submitted' || s.status === 'locked').length
   const totalSubjects = subjects.length
   const ratioText = `${submittedCount} / ${totalSubjects}`
@@ -271,11 +279,11 @@ export const ClassTeacherOverviewPage: React.FC<ClassTeacherOverviewPageProps> =
           <div className="mt-6 pt-4 border-t border-cream-border/70 text-xs text-charcoal-muted space-y-1">
             <div className="flex justify-between">
               <span>Form Master:</span>
-              <span className="font-bold text-charcoal-dark">Mrs. Bola Adeyemi</span>
+              <span className="font-bold text-charcoal-dark">{effectiveTeacher}</span>
             </div>
             <div className="flex justify-between">
               <span>Academic Term:</span>
-              <span className="font-bold text-charcoal-dark">2nd Term (Mid-Term)</span>
+              <span className="font-bold text-charcoal-dark">{effectiveTerm}</span>
             </div>
           </div>
         </Card>

@@ -24,6 +24,7 @@ import {
   AVAILABLE_CLASSES,
   estimateRecipientCount,
 } from './announcementsData'
+import { useSchool } from '@/context/SchoolContext'
 
 export interface AdminAnnouncementsComposerPageProps {
   initialAnnouncement?: AdminAnnouncement | null
@@ -36,6 +37,7 @@ export const AdminAnnouncementsComposerPage: React.FC<AdminAnnouncementsComposer
   onSave,
   onCancel,
 }) => {
+  const { school } = useSchool()
   // Form State
   const [title, setTitle] = useState(initialAnnouncement?.title || '')
   const [content, setContent] = useState(initialAnnouncement?.content || '')
@@ -216,7 +218,7 @@ export const AdminAnnouncementsComposerPage: React.FC<AdminAnnouncementsComposer
                 School Broadcast System
               </span>
               <span className="text-xs text-charcoal-muted">
-                Crown Academy Lagos
+                {school.name || 'Apex International College'}
               </span>
             </div>
             <h1 className="text-lg sm:text-xl font-display font-bold text-charcoal-dark mt-0.5">
@@ -644,7 +646,7 @@ export const AdminAnnouncementsComposerPage: React.FC<AdminAnnouncementsComposer
             {/* Footer inside Card */}
             <div className="pt-2 border-t border-cream-border/80 flex flex-wrap items-center justify-between gap-2 text-xs">
               <div className="text-[11px] text-indigo-700 font-semibold">
-                Source: Principal's Office • Crown Academy
+                Source: Principal's Office • {school.shortName || school.name || 'Apex College'}
               </div>
 
               {/* Active Channels pills */}

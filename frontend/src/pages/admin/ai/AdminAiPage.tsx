@@ -28,8 +28,10 @@ import {
   sendAdminAiChat,
   generateReportCardComment as generateAiReportCardComment,
 } from '@/lib/api'
+import { useSchool } from '@/context/SchoolContext'
 
 export const AdminAiPage: React.FC = () => {
+  const { school } = useSchool()
   const [activeTab, setActiveTab] = useState<string>('chat')
 
   // --- CHAT TAB STATE ---
@@ -159,7 +161,7 @@ export const AdminAiPage: React.FC = () => {
 
         <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-indigo-50 border border-indigo-200/60 text-indigo-brand text-xs font-semibold">
           <Sparkles className="w-3.5 h-3.5 text-gold-brand" />
-          <span>Crown Academy AI Copilot</span>
+          <span>{school.shortName || school.name || 'Apex College'} AI Copilot</span>
         </div>
       </div>
 
@@ -212,7 +214,7 @@ export const AdminAiPage: React.FC = () => {
                     onChange={() => {}}
                     className="w-full bg-cream-base/50 text-charcoal-dark text-xs sm:text-sm rounded-xl py-2.5 pl-9 pr-3 border border-cream-border transition-all duration-200 focus:outline-none focus:ring-2 focus:border-indigo-brand focus:ring-indigo-brand/20 font-medium"
                   >
-                    <option value="JSS 2A">JSS 2A (Form Master: Mrs. Bola Adeyemi)</option>
+                    <option value="JSS 2A">JSS 2A (Form Master: Mr. Babatunde Adeyemi)</option>
                     <option value="JSS 2B">JSS 2B</option>
                     <option value="SSS 1 Science">SSS 1 Science</option>
                     <option value="SSS 2">SSS 2</option>

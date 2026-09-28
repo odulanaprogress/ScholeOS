@@ -25,9 +25,9 @@ export interface StudentOverviewPageProps {
 }
 
 export const StudentOverviewPage: React.FC<StudentOverviewPageProps> = ({
-  studentName = 'Fatima Bello',
+  studentName = 'Somtochukwu Okafor',
   classNameTitle = 'JSS 2A',
-  admissionNumber = 'JSS2/003',
+  admissionNumber = 'APX/2025/001',
   onNavigateToResults,
   onNavigateToAssignments,
   onNavigateToTimetable,

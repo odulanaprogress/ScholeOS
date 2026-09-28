@@ -64,7 +64,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleCollapse,
   isMobileOpen = false,
   onCloseMobile,
-  schoolName = 'Crown Academy Lagos',
+  schoolName = 'Apex International College',
   schoolLogo,
   accentColor = '#4338CA',
   trialDaysLeft = 12,

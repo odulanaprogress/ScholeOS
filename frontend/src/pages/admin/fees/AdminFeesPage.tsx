@@ -63,7 +63,7 @@ export const AdminFeesPage: React.FC<AdminFeesPageProps> = ({
       await createFeeStructure({
         feeType: savedFee.name,
         amount: savedFee.amount,
-        termId: savedFee.term || 'term_1',
+        termId: (savedFee as any).term || 'term_1',
         dueDate: savedFee.dueDate || new Date().toISOString().split('T')[0],
       })
       addToast('success', `⚡ Fee type "${savedFee.name}" synced to PostgreSQL.`)

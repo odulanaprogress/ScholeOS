@@ -40,7 +40,6 @@ import {
   type ClassItem,
   type SubscriptionPlan,
   type BillingTransaction,
-  INITIAL_SCHOOL_INFO,
   INITIAL_CLASSES,
   INITIAL_SUBJECTS,
   INITIAL_SCORE_COMPONENTS,
@@ -48,17 +47,26 @@ import {
   INITIAL_BILLING_TRANSACTIONS,
   PRESET_COLORS,
 } from './settingsData'
+import { useSchool } from '@/context/SchoolContext'
 
 export const AdminSettingsPage: React.FC = () => {
+  const { school, updateSchool } = useSchool()
   const [activeTab, setActiveTab] = useState('school_info')
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   // Part A: School Info State
-  const [schoolInfo, setSchoolInfo] = useState<SchoolInfoSettings>(INITIAL_SCHOOL_INFO)
+  const [schoolInfo, setSchoolInfo] = useState<SchoolInfoSettings>(() => ({
+    schoolName: school.name || 'Apex International College',
+    schoolAbbr: school.shortName || 'Apex College',
+    schoolAddress: school.address || '15 Victoria Island Crescent, Lagos, Nigeria',
+    studentRange: '200-500',
+    contactEmail: `admin@${(school.shortName || 'apex').toLowerCase().replace(/[^a-z0-9]/g, '')}.edu.ng`,
+    contactPhone: '+234 (0) 803 123 4567',
+  }))
 
   // Part B: Branding State
-  const [accentColor, setAccentColor] = useState('#4338CA')
-  const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const [accentColor, setAccentColor] = useState(school.brandColor || '#4338CA')
+  const [logoPreview, setLogoPreview] = useState<string | null>(school.logoUrl || null)
 
   // Part C: Academic Setup State
   const [classes, setClasses] = useState<ClassItem[]>(INITIAL_CLASSES)
@@ -267,7 +275,7 @@ export const AdminSettingsPage: React.FC = () => {
           <div className="space-y-4 max-w-3xl">
             <Input
               label="Official School Name"
-              placeholder="e.g. Crown Academy Lagos"
+              placeholder="e.g. Apex International College"
               value={schoolInfo.schoolName}
               onChange={(e) =>
                 setSchoolInfo({ ...schoolInfo, schoolName: e.target.value })
@@ -277,7 +285,7 @@ export const AdminSettingsPage: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="Short Name / Acronym"
-                placeholder="e.g. CAL"
+                placeholder="e.g. APX"
                 helperText="Used on SMS headers, broadsheets, and candidate registration numbers"
                 value={schoolInfo.schoolAbbr}
                 onChange={(e) =>
@@ -309,7 +317,7 @@ export const AdminSettingsPage: React.FC = () => {
 
             <Input
               label="Physical Campus Address"
-              placeholder="e.g. Plot 12, Commercial Avenue, Yaba, Lagos State"
+              placeholder="e.g. 15 Victoria Island Crescent, Lagos, Nigeria"
               value={schoolInfo.schoolAddress}
               onChange={(e) =>
                 setSchoolInfo({ ...schoolInfo, schoolAddress: e.target.value })
@@ -319,7 +327,7 @@ export const AdminSettingsPage: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
               <Input
                 label="Bursary & Admin Contact Email"
-                placeholder="e.g. admin@crownacademy.sch.ng"
+                placeholder="e.g. admin@apexcollege.edu.ng"
                 value={schoolInfo.contactEmail}
                 onChange={(e) =>
                   setSchoolInfo({ ...schoolInfo, contactEmail: e.target.value })
@@ -341,9 +349,14 @@ export const AdminSettingsPage: React.FC = () => {
             <Button
               variant="primary"
               size="sm"
-              onClick={() =>
-                triggerSuccessBanner('School details have been updated successfully.')
-              }
+              onClick={async () => {
+                await updateSchool({
+                  name: schoolInfo.schoolName,
+                  shortName: schoolInfo.schoolAbbr,
+                  address: schoolInfo.schoolAddress,
+                })
+                triggerSuccessBanner('School profile updated and saved to Supabase PostgreSQL.')
+              }}
               className="px-5 shadow-xs font-semibold text-xs sm:text-sm"
             >
               Save Changes
@@ -497,10 +510,10 @@ export const AdminSettingsPage: React.FC = () => {
                         className="font-display font-bold text-xs leading-tight"
                         style={{ color: accentColor }}
                       >
-                        {schoolInfo.schoolName || 'Crown Academy Lagos'}
+                        {schoolInfo.schoolName || school.name || 'Apex International College'}
                       </p>
                       <p className="text-[10px] text-charcoal-muted">
-                        Session 2025/2026
+                        Session {school.currentTerm}
                       </p>
                     </div>
                   </div>
@@ -538,9 +551,13 @@ export const AdminSettingsPage: React.FC = () => {
             <Button
               variant="primary"
               size="sm"
-              onClick={() =>
-                triggerSuccessBanner('School branding and accent color saved successfully.')
-              }
+              onClick={async () => {
+                await updateSchool({
+                  brandColor: accentColor,
+                  logoUrl: logoPreview,
+                })
+                triggerSuccessBanner('School branding and accent color saved to Supabase PostgreSQL.')
+              }}
               className="px-5 shadow-xs font-semibold text-xs sm:text-sm"
             >
               Save Changes
@@ -936,7 +953,7 @@ export const AdminSettingsPage: React.FC = () => {
                   Subscription Invoicing & Payment History
                 </h3>
                 <p className="text-xs text-charcoal-muted mt-0.5">
-                  Official tax receipts and institutional payment logs for Crown Academy Lagos.
+                  Official tax receipts and institutional payment logs for {school.name || 'Apex International College'}.
                 </p>
               </div>
               <Badge variant="neutral" size="sm">

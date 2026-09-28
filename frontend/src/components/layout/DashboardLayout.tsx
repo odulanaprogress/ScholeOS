@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Sidebar, type SidebarNavItem } from '../ui/Sidebar'
 import { TopBar } from '../ui/TopBar'
 import { cn } from '@/utils/cn'
+import { useSchool } from '@/context/SchoolContext'
 import {
   LayoutDashboard,
   Users,
@@ -44,15 +45,19 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   pageTitle,
   pageSubtitle,
   headerAction,
-  schoolName = 'Crown Academy Lagos',
-  schoolLogo,
-  accentColor = '#4338CA',
+  schoolName: propSchoolName,
+  schoolLogo: propSchoolLogo,
+  accentColor: propAccentColor,
   onLogout,
   onOpenSettings,
   onOpenProfile,
   mobileNavTabs: customMobileNavTabs,
   className,
 }) => {
+  const { school } = useSchool()
+  const schoolName = propSchoolName || school.name || 'Apex International College'
+  const schoolLogo = propSchoolLogo !== undefined ? propSchoolLogo : (school.logoUrl || null)
+  const accentColor = propAccentColor || school.brandColor || '#4338CA'
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
 

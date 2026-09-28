@@ -332,7 +332,7 @@ export const PARENT_ANNOUNCEMENTS: SchoolAnnouncement[] = [
   {
     id: 'ann-2',
     title: 'School Bus Route Expansion (Zone C & Island Route)',
-    content: 'Due to popular request from parents, Crown Academy has officially added two new morning pickup routes covering Lekki Phase 1 and Victoria Island axis.',
+    content: 'Due to popular request from parents, school management has officially added two new morning pickup routes covering Lekki Phase 1 and Victoria Island axis.',
     author: 'Transport & Logistics Committee',
     date: 'Sep 03, 2026',
     priority: 'normal',

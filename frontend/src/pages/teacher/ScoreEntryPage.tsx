@@ -693,7 +693,7 @@ export const ScoreEntryPage: React.FC<ScoreEntryPageProps> = ({
           </div>
 
           <div className="p-3 bg-cream-base/50 rounded-xl border border-cream-border text-xs text-charcoal-muted">
-            The School Principal (Alhaji Dr. S. Bello) will receive an instant notification and can approve the unlock.
+            The School Principal will receive an instant notification and can approve the unlock.
           </div>
         </div>
       </Modal>

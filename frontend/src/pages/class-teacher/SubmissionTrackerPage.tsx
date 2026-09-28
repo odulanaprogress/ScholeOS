@@ -31,14 +31,14 @@ const INITIAL_SUBJECT_TRACKER: SubjectTrackerItem[] = [
   {
     id: 'sub-1',
     subject: 'Mathematics',
-    teacherName: 'Mrs. Bola Adeyemi',
+    teacherName: 'Mr. Babatunde Adeyemi',
     status: 'draft',
     lastUpdated: '10 mins ago (You)',
   },
   {
     id: 'sub-2',
     subject: 'English Language',
-    teacherName: 'Mrs. Fatima Okafor',
+    teacherName: 'Mrs. Chioma Okonkwo',
     status: 'submitted',
     lastUpdated: 'Yesterday at 3:45 PM',
   },
