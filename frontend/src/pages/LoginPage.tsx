@@ -19,6 +19,8 @@ import {
   UserCheck,
   Sparkles,
   LogOut,
+  Laptop,
+  Building2,
 } from 'lucide-react'
 import { SignIn, useUser, useClerk } from '@clerk/clerk-react'
 import { scholeosClerkAppearance } from '@/lib/clerk'
@@ -278,7 +280,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                       <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
                         Quick Launch Role:
                       </label>
-                      <div className="grid grid-cols-2 gap-1.5">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                         <button
                           type="button"
                           onClick={() => handleQuickPersona('admin', `principal@${school.domain || 'apexcollege.ng'}`)}
@@ -310,6 +312,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                         >
                           <GraduationCap className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
                           <span className="truncate">Parent Portal</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleQuickPersona('student', `somtochukwu@${school.domain || 'apexcollege.ng'}`)}
+                          className="px-2.5 py-2 rounded-xl text-left bg-cream-base/60 hover:bg-cream-base border border-cream-border text-xs font-semibold text-charcoal-dark flex items-center gap-2 transition-colors"
+                        >
+                          <Laptop className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                          <span className="truncate">Student Portal</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleQuickPersona('super-admin', 'superadmin@scholeos.ng')}
+                          className="px-2.5 py-2 rounded-xl text-left bg-cream-base/60 hover:bg-cream-base border border-cream-border text-xs font-semibold text-charcoal-dark flex items-center gap-2 transition-colors"
+                        >
+                          <Building2 className="w-3.5 h-3.5 text-gold-brand shrink-0" />
+                          <span className="truncate">Super Admin</span>
                         </button>
                       </div>
                     </div>

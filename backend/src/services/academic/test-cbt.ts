@@ -612,6 +612,7 @@ async function runCbtTests() {
   console.log("\n===============================================================");
   console.log(`  🎉 ALL ${passCount} WAVE 10 CBT BACKEND TESTS PASSED SUCCESSFULLY!`);
   console.log("===============================================================\n");
+  process.exit(0);
 }
 
 runCbtTests().catch((err) => {

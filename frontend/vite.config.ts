@@ -8,6 +8,17 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      'react': fileURLToPath(new URL('./node_modules/react', import.meta.url)),
+      'react-dom': fileURLToPath(new URL('./node_modules/react-dom', import.meta.url)),
+    },
+    dedupe: ['react', 'react-dom'],
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', '@clerk/clerk-react'],
+  },
+  server: {
+    fs: {
+      allow: ['..'],
     },
   },
 })

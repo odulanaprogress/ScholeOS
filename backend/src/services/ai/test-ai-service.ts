@@ -576,6 +576,7 @@ async function runAiServiceTests() {
   console.log("\n===============================================================");
   console.log(`  🎉 ALL ${passCount} WAVE 9 AI-SERVICE TESTS PASSED SUCCESSFULLY!`);
   console.log("===============================================================\n");
+  process.exit(0);
 }
 
 runAiServiceTests().catch((err) => {

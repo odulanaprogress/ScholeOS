@@ -267,6 +267,7 @@ async function runDocumentServiceTests() {
   console.log("\n===============================================================");
   console.log(`       🏁 TEST SUMMARY: ${passCount} PASSED, 0 FAILED`);
   console.log("===============================================================\n");
+  process.exit(0);
 }
 
 runDocumentServiceTests().catch((err) => {
